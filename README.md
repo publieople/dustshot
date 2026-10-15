@@ -66,6 +66,10 @@ output, starts a recording, or opens the capture history.*
   wtype or ydotool, or by hand with `--manual`.
 - **Recording**: region or whole output to MP4 (H.264) through `wf-recorder`, optional GIF
   conversion through ffmpeg, wall-clock limit, a small stop-recording window.
+- **ScreenCast portal**: `--backend portal` drives `org.freedesktop.portal.ScreenCast`
+  (CreateSession / SelectSources / Start / OpenPipeWireRemote) and grabs each shared monitor
+  through GStreamer and PipeWire, so region and full captures work on compositors without
+  wlr-screencopy too; compositors that only publish DMA-BUF streams are imported through GL.
 - **Tray icon**: `catchlight tray` publishes a StatusNotifierItem icon whose dbusmenu captures a
   region or the whole output, starts a recording, opens the capture history, or quits; every row
   runs the matching CLI command in its own process.
@@ -80,6 +84,9 @@ output, starts a recording, or opens the capture history.*
   `wl-clipboard` when the GTK clipboard is not available
 - optional: a StatusNotifierWatcher host (KDE Plasma, quickshell / noctalia, waybar, ...) for
   `catchlight tray`
+- optional: for `--backend portal`, the desktop portal itself plus PyGObject, `pipewiresrc` and
+  the GL plugins (Arch: `xdg-desktop-portal`, `python-gobject`, `gst-plugin-pipewire`,
+  `gst-plugins-base`)
 
 On Arch / CachyOS:
 
@@ -126,6 +133,7 @@ not been built in CI, because capture and overlay need a live Wayland session.
 ```text
 catchlight                     # region capture, straight into the editor
 catchlight full                # whole output, into the editor
+catchlight full --backend portal  # same, through the ScreenCast portal
 catchlight capture --no-editor # capture and just save/copy
 catchlight edit IMAGE          # open the editor on an existing file
 catchlight pin IMAGE           # pin an image on the screen
@@ -144,9 +152,9 @@ catchlight doctor              # check dependencies and environment
 catchlight version
 ```
 
-Useful flags: `--rect '100,100 800x600'` to skip the overlay, `--dir`, `--format`, `--no-copy`,
-`--delay SECONDS`, `--pin`, `--position X,Y`, `--scale`. Run `catchlight COMMAND --help` for the
-full list.
+Useful flags: `--rect 100,100,800,600` to skip the overlay, `--backend auto|grim|portal`,
+`--dir`, `--format`, `--no-copy`, `--delay SECONDS`, `--pin`, `--position X,Y`, `--scale`. Run
+`catchlight COMMAND --help` for the full list.
 
 ## Shortcuts
 

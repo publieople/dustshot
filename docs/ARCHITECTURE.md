@@ -8,6 +8,7 @@ what lets the test suite and CI run headless.
 | `catchlight/config.py` | `Settings` dataclasses, palette defaults, JSON store under XDG dirs |
 | `catchlight/capture/base.py` | `Geometry`, `OutputInfo`, `Frame`; logical/physical scale maths |
 | `catchlight/capture/screencopy.py` | output discovery (`niri msg`), frames (`grim`), region capture |
+| `catchlight/capture/portal.py` | ScreenCast portal client and PipeWire frame grabbing |
 | `catchlight/selection.py` | the region state machine (new / move / resize, handles, clamping) |
 | `catchlight/annotation/items.py` | item model, style, registry, JSON round-trip |
 | `catchlight/annotation/render.py` | the Pillow renderer shared by GUI and tests |

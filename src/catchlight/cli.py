@@ -84,15 +84,30 @@ def load_image(path: str) -> Any:
     return image.convert("RGB")
 
 
-def capture_full() -> Any:
-    from .capture import screencopy
+def capture_backend(name: str = "auto") -> str:
+    """Resolve the requested capture backend to the one that will be used."""
 
+    from .capture import portal, screencopy
+
+    grim = screencopy.have_grim()
+    if name == "auto" and grim:
+        return "grim"
+    return portal.backend_choice(name, grim=grim, portal=portal.have_portal())
+
+
+def capture_full(backend: str = "auto") -> Any:
+    from .capture import portal, screencopy
+
+    if capture_backend(backend) == "portal":
+        return portal.capture_all()
     return screencopy.capture_all()
 
 
-def capture_region(region: Any) -> Any:
-    from .capture import screencopy
+def capture_region(region: Any, backend: str = "auto") -> Any:
+    from .capture import portal, screencopy
 
+    if capture_backend(backend) == "portal":
+        return portal.capture_region(region)
     return screencopy.capture_region(region)
 
 
@@ -183,14 +198,15 @@ def command_capture(args: argparse.Namespace, settings: Settings, store: Setting
 
     explicit = getattr(args, "rect", None)
     source = "full" if args.command == "full" else "region"
+    backend = getattr(args, "backend", None) or "auto"
     result = None
     region = None
 
     if explicit:
         region = parse_rect(explicit)
-        image = capture_region(region)
+        image = capture_region(region, backend)
     elif args.command == "full":
-        image = capture_full()
+        image = capture_full(backend)
     else:
         result = pick_region(settings)
         if result.key == "ctrl-r" and result.region is not None:
@@ -199,10 +215,10 @@ def command_capture(args: argparse.Namespace, settings: Settings, store: Setting
             print("已取消")
             return 0
         if result.full:
-            image = capture_full()
+            image = capture_full(backend)
         else:
             region = result.region
-            image = capture_region(region)
+            image = capture_region(region, backend)
 
     if region is not None:
         remember_region(settings, region)
@@ -632,6 +648,18 @@ def command_doctor(args: argparse.Namespace, settings: Settings, store: Settings
     add("ffmpeg（GIF 转换）", shutil.which("ffmpeg") is not None, shutil.which("ffmpeg") or "未安装")
 
     try:
+        from .capture import portal
+
+        version = portal.portal_version()
+        add(
+            "ScreenCast portal（--backend portal）",
+            version is not None,
+            f"version {version}" if version is not None else "不可用",
+        )
+    except Exception as exc:  # pragma: no cover - depends on host
+        add("ScreenCast portal（--backend portal）", False, str(exc))
+
+    try:
         import gi
 
         gi.require_version("Gtk", "4.0")
@@ -736,6 +764,12 @@ def build_parser() -> argparse.ArgumentParser:
         sub.add_argument("--no-copy", action="store_true", help="本次不复制到剪贴板")
         sub.add_argument("--delay", type=float, default=0.0, metavar="SEC", help="截图前延时")
         sub.add_argument("--rect", metavar="X,Y,W,H", help="直接截取指定区域（不弹选区）")
+        sub.add_argument(
+            "--backend",
+            choices=["auto", "grim", "portal"],
+            default="auto",
+            help="截图后端：auto 优先 grim，没有 grim 时用 ScreenCast portal",
+        )
 
     region = subparsers.add_parser("region", help="框选截图（默认命令）")
     add_capture_options(region)

@@ -211,3 +211,41 @@ def test_scroll_command_stitches_the_frames(
     assert target.exists()
     assert Image.open(target).size == (60, 250)
     assert "已保存滚动截图" in capsys.readouterr().out
+
+
+def test_parser_accepts_a_capture_backend() -> None:
+    parser = cli.build_parser()
+    args = parser.parse_args(["region", "--backend", "portal"])
+    assert args.backend == "portal"
+    assert parser.parse_args(["full"]).backend == "auto"
+
+
+def test_capture_backend_prefers_grim_unless_asked(monkeypatch: pytest.MonkeyPatch) -> None:
+    from catchlight.capture import portal, screencopy
+    from catchlight.capture.screencopy import CaptureError
+
+    monkeypatch.setattr(screencopy, "have_grim", lambda: True)
+    monkeypatch.setattr(portal, "have_portal", lambda: True)
+    assert cli.capture_backend("auto") == "grim"
+    assert cli.capture_backend("portal") == "portal"
+
+    monkeypatch.setattr(screencopy, "have_grim", lambda: False)
+    assert cli.capture_backend("auto") == "portal"
+    with pytest.raises(CaptureError):
+        cli.capture_backend("grim")
+
+
+def test_capture_full_dispatches_to_the_requested_backend(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from catchlight.capture import portal, screencopy
+
+    calls: list[str] = []
+    monkeypatch.setattr(screencopy, "have_grim", lambda: True)
+    monkeypatch.setattr(portal, "have_portal", lambda: True)
+    monkeypatch.setattr(screencopy, "capture_all", lambda: calls.append("grim") or "grim-image")
+    monkeypatch.setattr(portal, "capture_all", lambda **kwargs: calls.append("portal") or "portal-image")
+
+    assert cli.capture_full("auto") == "grim-image"
+    assert cli.capture_full("portal") == "portal-image"
+    assert calls == ["grim", "portal"]

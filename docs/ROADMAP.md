@@ -70,8 +70,14 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
 - done: `catchlight tray` publishes a StatusNotifierItem icon with a dbusmenu (region / full
   capture, recording, history, quit) and spawns the matching CLI command per row; the menu model and
   the icon are unit-tested and the D-Bus server has cross-process tests (`dbus-run-session`).
-- planned: a ScreenCast-portal backend for compositors without wlr-screencopy, a tested Flatpak
-  build, translations.
+- done: a ScreenCast-portal backend (capture/portal.py) for compositors without wlr-screencopy:
+  the CreateSession / SelectSources / Start / OpenPipeWireRemote dance, one PipeWire stream per
+  shared monitor read through GStreamer, and `--backend auto|grim|portal` on every capture command
+  plus a `catchlight doctor` row. Compositors that only publish DMA-BUF streams (niri) fail the
+  plain `videoconvert` pipeline, so a GL import pipeline is tried second. Verified on a live niri
+  session: a 2560x1600 PNG that matches `grim` on a static desktop (0.6% of pixels differ, mostly
+  the clock), with the D-Bus dance covered by cross-process tests under `dbus-run-session`.
+- planned: a tested Flatpak build, translations.
 
 ## Deliberately out of scope
 
