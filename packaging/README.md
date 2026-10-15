@@ -43,8 +43,10 @@ practice:
 - The tray item cannot own `org.kde.StatusNotifierItem-<pid>-1` (a sandbox only lets a process own
   names inside its own application id), so it falls back to
   `io.github.publieople.Dustshot.StatusNotifierItem-<pid>-1`.
-- `$HOME` is a private tmpfs: `--dir ~/Pictures/...` would disappear with the sandbox. The host
-  Pictures directory is `~/图片` here (mapped by `--filesystem=xdg-pictures`), so save there.
+- `$HOME` is a private tmpfs, so a path the sandbox invented disappears with it. The default save
+  directory follows the host's XDG pictures folder (the manifest grants `xdg-config/user-dirs.dirs`
+  read-only, and that folder keeps its localised name, `~/图片` here), which makes default captures
+  land next to the host's pictures; an explicit `--dir` inside the sandbox home is still ephemeral.
 - tesseract (OCR), zbar (barcodes) and wf-recorder (recording) are not bundled; doctor reports
   them as missing, and `dustshot ... --` helpers stay runnable from the host install.
 

@@ -100,7 +100,9 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
   fall back to ordinary windows, the tray item falls back to a bus name under the application id,
   and OCR / recording stay on the host install. Verified on a live niri session: a 2560x1600
   full-screen PNG and a 400x300 region capture taken from the sandbox match the host `grim`
-  output, and `dustshot doctor` reports the sandbox.
+  output, and `dustshot doctor` reports the sandbox. The default save directory follows the host
+  XDG pictures folder (the manifest grants `xdg-config/user-dirs.dirs` read-only, since a sandbox
+  home is private and would otherwise swallow every default capture).
 
 ## Deliberately out of scope
 

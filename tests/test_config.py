@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from dustshot.config import SettingsStore
+from dustshot.config import CaptureSettings, SettingsStore, default_save_dir, pictures_dir
 
 
 def test_defaults(store: SettingsStore) -> None:
@@ -57,3 +57,35 @@ def test_reset_restores_defaults(store: SettingsStore) -> None:
     again = store.reset()
     assert again.capture.image_format == "png"
     assert Path(store.path).exists()
+
+
+def test_pictures_dir_follows_the_xdg_user_dirs_file(tmp_path: Path, monkeypatch) -> None:
+    """A localised picture folder keeps its name inside a Flatpak sandbox."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "user-dirs.dirs").write_text(
+        'XDG_PICTURES_DIR="$HOME/图片"\nXDG_DOWNLOAD_DIR="$HOME/下载"\n', encoding="utf-8"
+    )
+    assert pictures_dir() == tmp_path / "图片"
+
+
+def test_pictures_dir_accepts_the_braced_variable(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "user-dirs.dirs").write_text(
+        'XDG_PICTURES_DIR="${HOME}/Bilder"\n', encoding="utf-8"
+    )
+    assert pictures_dir() == tmp_path / "Bilder"
+
+
+def test_pictures_dir_falls_back_to_home(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    assert pictures_dir() == tmp_path / "Pictures"
+
+
+def test_default_save_dir_sits_under_the_pictures_dir() -> None:
+    assert Path(CaptureSettings().save_dir) == default_save_dir()
+    assert default_save_dir().name == "Screenshots"

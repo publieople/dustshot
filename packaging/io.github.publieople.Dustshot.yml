@@ -31,6 +31,10 @@ finish-args:
   - --socket=fallback-x11
   - --device=dri
   - --filesystem=xdg-pictures
+  # The private home hides the host's user-dirs.dirs, and without it the default save
+  # directory would be read from the (localised) XDG names as "~/Pictures" and land in the
+  # sandbox home, where it vanishes on exit. Read the host file instead.
+  - --filesystem=xdg-config/user-dirs.dirs:ro
   - --filesystem=xdg-config/dustshot:create
   - --filesystem=xdg-data/dustshot:create
   # The ScreenCast portal delivers frames over PipeWire; without this the socket is invisible.

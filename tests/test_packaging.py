@@ -76,6 +76,13 @@ def test_flatpak_manifest_uses_the_same_identifier() -> None:
     assert f"{APP_ID}.metainfo.xml" in text
 
 
+def test_flatpak_manifest_grants_the_pictures_folder() -> None:
+    """The default save directory follows the host pictures folder, so the sandbox needs both."""
+    text = MANIFEST.read_text(encoding="utf-8")
+    assert "--filesystem=xdg-pictures" in text
+    assert "--filesystem=xdg-config/user-dirs.dirs:ro" in text
+
+
 @pytest.mark.parametrize("size", ICON_SIZES)
 def test_icon_is_present(size: str) -> None:
     icon = PACKAGING / "icons" / "hicolor" / size / "apps" / f"{APP_ID}.png"

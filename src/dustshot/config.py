@@ -37,6 +37,41 @@ def config_path() -> Path:
     return config_dir() / "config.json"
 
 
+def _xdg_user_dir(key: str) -> Path | None:
+    """Read one directory out of the XDG user-dirs file, if it names one.
+
+    Flatpak hands an application a private home directory, so only the folders
+    the manifest asks for keep their host name (which is localised, e.g.
+    ~/图片). Reading the XDG file is what keeps the default save directory
+    inside a folder the user can actually find again.
+    """
+    path = _xdg("XDG_CONFIG_HOME", Path.home() / ".config") / "user-dirs.dirs"
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    home = str(Path.home())
+    for line in text.splitlines():
+        name, separator, value = line.strip().partition("=")
+        if not separator or name != key:
+            continue
+        expanded = value.strip().strip('"').replace("${HOME}", home).replace("$HOME", home)
+        candidate = Path(expanded)
+        if candidate.is_absolute():
+            return candidate
+    return None
+
+
+def pictures_dir() -> Path:
+    """The user's pictures folder, falling back to ~/Pictures."""
+    return _xdg_user_dir("XDG_PICTURES_DIR") or (Path.home() / "Pictures")
+
+
+def default_save_dir() -> Path:
+    """Where captures land unless the user configured something else."""
+    return pictures_dir() / "Screenshots"
+
+
 DEFAULT_PALETTE = [
     "#ff3b30",
     "#ff9500",
@@ -55,7 +90,7 @@ DEFAULT_PALETTE = [
 class CaptureSettings:
     """Behaviour of the frame grab and the selection overlay."""
 
-    save_dir: str = str(Path.home() / "Pictures" / "Screenshots")
+    save_dir: str = str(default_save_dir())
     filename_pattern: str = "Shot_%Y-%m-%d_%H-%M-%S"
     image_format: str = "png"
     copy_after_capture: bool = True

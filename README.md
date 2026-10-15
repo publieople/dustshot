@@ -219,7 +219,8 @@ bind = SUPER, Print, exec, dustshot full
 Settings live in `~/.config/dustshot/config.json` and are written by `dustshot settings
 --set SECTION.FIELD=VALUE`. The capturable sections are `capture`, `annotation`, `pin`, `ocr`
 and `recording`; capture history is kept in `~/.local/share/dustshot/history.json` and
-screenshots default to `~/Pictures/Screenshots`.
+screenshots default to `<pictures>/Screenshots` (the XDG pictures folder, `~/Pictures` when the
+system does not define one).
 
 ## Translations
 
