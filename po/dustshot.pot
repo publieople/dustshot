@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dustshot\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-15 18:06+0800\n"
+"POT-Creation-Date: 2026-10-15 22:04+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -28,6 +28,46 @@ msgstr ""
 #: src/dustshot/barcode.py:82
 #, python-brace-format
 msgid "zbarimg 退出码 {returncode}"
+msgstr ""
+
+#: src/dustshot/capture/niri.py:78
+#, python-brace-format
+msgid "找不到 niri 命令：{path}"
+msgstr ""
+
+#: src/dustshot/capture/niri.py:80
+#, python-brace-format
+msgid "niri 命令超时：{path}"
+msgstr ""
+
+#: src/dustshot/capture/niri.py:94
+msgid "niri 后端不可用：Flatpak 沙箱里连不上合成器的 IPC"
+msgstr ""
+
+#: src/dustshot/capture/niri.py:96
+msgid "niri 后端不可用：找不到 niri 命令"
+msgstr ""
+
+#: src/dustshot/capture/niri.py:98
+msgid "niri 后端不可用：niri 的 IPC 没有响应"
+msgstr ""
+
+#: src/dustshot/capture/niri.py:106
+#, python-brace-format
+msgid "无法打开 niri 截图界面：{detail}"
+msgstr ""
+
+#: src/dustshot/capture/niri.py:137
+msgid "niri 截图超时（界面可能已取消）"
+msgstr ""
+
+#: src/dustshot/capture/niri.py:164
+#, python-brace-format
+msgid "niri 截图失败：{detail}"
+msgstr ""
+
+#: src/dustshot/capture/niri.py:172
+msgid "没有从剪贴板读到 niri 的截图"
 msgstr ""
 
 #: src/dustshot/capture/portal.py:235
@@ -162,154 +202,173 @@ msgid ""
 "    dustshot pin shot.png            把已有图片钉在屏幕上\n"
 "    dustshot codes                   框选并识别二维码/条码\n"
 "    dustshot redact                 框选并自动遮住敏感信息\n"
+"    dustshot region --backend niri   用 niri 自带的截图界面选区域，再进编辑"
+"器\n"
+"    dustshot edit --clipboard        编辑剪贴板里的图片（例如 niri 刚截好的"
+"图）\n"
 "    dustshot scroll --steps 4         滚动截图并拼接成长图\n"
 "    dustshot history --gui           浏览截图历史\n"
 "    dustshot tray                   在系统托盘里驻留一个图标\n"
 "    dustshot doctor                  检查运行环境\n"
 msgstr ""
 
-#: src/dustshot/cli.py:61
+#: src/dustshot/cli.py:63
 msgid "区域格式应为 x,y,w,h"
 msgstr ""
 
-#: src/dustshot/cli.py:65
+#: src/dustshot/cli.py:67
 #, python-brace-format
 msgid "区域必须是数字：{exc}"
 msgstr ""
 
-#: src/dustshot/cli.py:71
+#: src/dustshot/cli.py:73
 msgid "坐标格式应为 x,y"
 msgstr ""
 
-#: src/dustshot/cli.py:82
+#: src/dustshot/cli.py:84
 #, python-brace-format
 msgid "找不到文件：{target}"
 msgstr ""
 
-#: src/dustshot/cli.py:221 src/dustshot/cli.py:272 src/dustshot/cli.py:285
-#: src/dustshot/cli.py:323 src/dustshot/cli.py:356 src/dustshot/cli.py:421
-#: src/dustshot/cli.py:493
+#: src/dustshot/cli.py:104
+msgid "niri 后端不可用：需要正在运行的 niri（Flatpak 沙箱里连不上它的 IPC）"
+msgstr ""
+
+#: src/dustshot/cli.py:131
+msgid "niri 后端在它自己的界面里选区域，不能和 --rect 一起用"
+msgstr ""
+
+#: src/dustshot/cli.py:250 src/dustshot/cli.py:308 src/dustshot/cli.py:465
+#: src/dustshot/cli.py:537
 msgid "已取消"
 msgstr ""
 
-#: src/dustshot/cli.py:240 src/dustshot/ui/editor.py:254
+#: src/dustshot/cli.py:269 src/dustshot/ui/editor.py:255
 msgid "已复制到剪贴板"
 msgstr ""
 
-#: src/dustshot/cli.py:245 src/dustshot/cli.py:249
+#: src/dustshot/cli.py:274 src/dustshot/cli.py:278
 #, python-brace-format
 msgid "已保存：{path}"
 msgstr ""
 
-#: src/dustshot/cli.py:293 src/dustshot/cli.py:374
+#: src/dustshot/cli.py:296 src/dustshot/ui/editor.py:289
+msgid "剪贴板里没有图片"
+msgstr ""
+
+#: src/dustshot/cli.py:316
+msgid "请给出图片路径或 --clipboard"
+msgstr ""
+
+#: src/dustshot/cli.py:342 src/dustshot/cli.py:417
 #, python-brace-format
 msgid "OCR 失败：{exc}"
 msgstr ""
 
-#: src/dustshot/cli.py:306
+#: src/dustshot/cli.py:355
 #, python-brace-format
 msgid "--- {words} 个词，置信度 {confidence:.2f}，语言 {languages} ---"
 msgstr ""
 
-#: src/dustshot/cli.py:330
+#: src/dustshot/cli.py:376
 #, python-brace-format
 msgid "条码识别失败：{exc}"
 msgstr ""
 
-#: src/dustshot/cli.py:336
+#: src/dustshot/cli.py:382
 msgid "没有找到条码或二维码"
 msgstr ""
 
-#: src/dustshot/cli.py:367
+#: src/dustshot/cli.py:410
 #, python-brace-format
 msgid "未知的类型：{types}"
 msgstr ""
 
-#: src/dustshot/cli.py:379 src/dustshot/ui/editor.py:362
+#: src/dustshot/cli.py:422 src/dustshot/ui/editor.py:363
 msgid "没有发现敏感信息"
 msgstr ""
 
-#: src/dustshot/cli.py:400
+#: src/dustshot/cli.py:443
 #, python-brace-format
 msgid "已脱敏并保存：{target}"
 msgstr ""
 
-#: src/dustshot/cli.py:404
+#: src/dustshot/cli.py:447
 #, python-brace-format
 msgid "已脱敏并保存：{saved}"
 msgstr ""
 
-#: src/dustshot/cli.py:433
+#: src/dustshot/cli.py:477
 msgid "滚动到下一屏后按回车继续…"
 msgstr ""
 
-#: src/dustshot/cli.py:442
+#: src/dustshot/cli.py:486
 #, python-brace-format
 msgid "  第 {index}/{steps} 帧：{width} x {height}"
 msgstr ""
 
-#: src/dustshot/cli.py:459
+#: src/dustshot/cli.py:503
 #, python-brace-format
 msgid "滚动截图失败：{error}"
 msgstr ""
 
-#: src/dustshot/cli.py:476
+#: src/dustshot/cli.py:520
 #, python-brace-format
 msgid "已保存滚动截图：{path}（{width} x {height}，{frames} 帧）"
 msgstr ""
 
-#: src/dustshot/cli.py:508
+#: src/dustshot/cli.py:552
 msgid "已清空历史记录"
 msgstr ""
 
-#: src/dustshot/cli.py:515 src/dustshot/ui/history_window.py:98
+#: src/dustshot/cli.py:559 src/dustshot/ui/history_window.py:98
 msgid "还没有截图记录"
 msgstr ""
 
-#: src/dustshot/cli.py:544
+#: src/dustshot/cli.py:588
 msgid "设置格式应为 段.字段=值，例如 capture.image_format=jpg"
 msgstr ""
 
-#: src/dustshot/cli.py:549
+#: src/dustshot/cli.py:593
 #, python-brace-format
 msgid "没有这个设置段：{}（可用：{}）"
 msgstr ""
 
-#: src/dustshot/cli.py:552
+#: src/dustshot/cli.py:596
 #, python-brace-format
 msgid "没有这个字段：{}.{}（可用：{}）"
 msgstr ""
 
-#: src/dustshot/cli.py:556
+#: src/dustshot/cli.py:600
 #, python-brace-format
 msgid "值不合法：{exc}"
 msgstr ""
 
-#: src/dustshot/cli.py:562
+#: src/dustshot/cli.py:606
 msgid "已恢复默认设置"
 msgstr ""
 
-#: src/dustshot/cli.py:568
+#: src/dustshot/cli.py:612
 #, python-brace-format
 msgid "已写入 {path}"
 msgstr ""
 
-#: src/dustshot/cli.py:573
+#: src/dustshot/cli.py:617
 #, python-brace-format
 msgid "配置文件：{path}"
 msgstr ""
 
-#: src/dustshot/cli.py:574
+#: src/dustshot/cli.py:618
 #, python-brace-format
 msgid "数据目录：{path}"
 msgstr ""
 
-#: src/dustshot/cli.py:575
+#: src/dustshot/cli.py:619
 #, python-brace-format
 msgid "缓存目录：{path}"
 msgstr ""
 
-#: src/dustshot/cli.py:599
+#: src/dustshot/cli.py:644
 msgid ""
 "# GNOME：设置 -> 键盘 -> 自定义快捷键\n"
 "名称: Dustshot 截图    命令: dustshot region    按键: Super+Shift+S\n"
@@ -318,7 +377,7 @@ msgid ""
 "名称: Dustshot 录制    命令: dustshot record --gif   按键: Super+Shift+R"
 msgstr ""
 
-#: src/dustshot/cli.py:604
+#: src/dustshot/cli.py:649
 msgid ""
 "# 系统设置 -> 快捷键 -> 自定义快捷键 -> 新建 -> 命令/URL\n"
 "动作: Dustshot 截图   触发器: Meta+Shift+S   命令: dustshot region\n"
@@ -327,407 +386,429 @@ msgid ""
 "动作: Dustshot 录制   触发器: Meta+Shift+R   命令: dustshot record --gif"
 msgstr ""
 
-#: src/dustshot/cli.py:609
+#: src/dustshot/cli.py:654
 msgid ""
 "# 其它 wlroots 合成器（同 sway 写法）\n"
 "bindsym $mod+Shift+s exec dustshot region\n"
 "bindsym $mod+Shift+f exec dustshot full"
 msgstr ""
 
-#: src/dustshot/cli.py:638
+#: src/dustshot/cli.py:683
 #, python-brace-format
 msgid "支持的合成器：{}"
 msgstr ""
 
-#: src/dustshot/cli.py:640
+#: src/dustshot/cli.py:685
 #, python-brace-format
 msgid "# Dustshot 快捷键（{name}）"
 msgstr ""
 
-#: src/dustshot/cli.py:643
+#: src/dustshot/cli.py:688
 #, python-brace-format
 msgid "提示：{PROGRAM} 是唯一入口命令，所有子命令都支持 --help。"
 msgstr ""
 
-#: src/dustshot/cli.py:653
+#: src/dustshot/cli.py:698
 msgid "Wayland 会话"
 msgstr ""
 
-#: src/dustshot/cli.py:657
+#: src/dustshot/cli.py:702
 msgid "未设置"
 msgstr ""
 
-#: src/dustshot/cli.py:658
+#: src/dustshot/cli.py:703
 msgid "grim（截图）"
 msgstr ""
 
-#: src/dustshot/cli.py:658 src/dustshot/cli.py:659 src/dustshot/cli.py:669
-#: src/dustshot/cli.py:670 src/dustshot/cli.py:673 src/dustshot/cli.py:675
+#: src/dustshot/cli.py:703 src/dustshot/cli.py:704 src/dustshot/cli.py:723
+#: src/dustshot/cli.py:731 src/dustshot/cli.py:732 src/dustshot/cli.py:735
+#: src/dustshot/cli.py:737
 msgid "未安装"
 msgstr ""
 
-#: src/dustshot/cli.py:659
+#: src/dustshot/cli.py:704
 msgid "niri IPC（区域/指针）"
 msgstr ""
 
-#: src/dustshot/cli.py:664
+#: src/dustshot/cli.py:709
 msgid "Flatpak 沙箱"
 msgstr ""
 
-#: src/dustshot/cli.py:666
+#: src/dustshot/cli.py:711
 msgid ""
 "合成器对沙箱客户端隐藏 wlr-screencopy 与 layer-shell；截图默认走 ScreenCast "
 "portal"
 msgstr ""
 
-#: src/dustshot/cli.py:669
-msgid "wl-copy/wl-paste（剪贴板）"
-msgstr ""
-
-#: src/dustshot/cli.py:673
-msgid "录制后端（wf-recorder / gpu-screen-recorder）"
-msgstr ""
-
-#: src/dustshot/cli.py:675
-msgid "ffmpeg（GIF 转换）"
-msgstr ""
-
-#: src/dustshot/cli.py:684
-msgid "不可用"
-msgstr ""
-
-#: src/dustshot/cli.py:705
-msgid "未安装（贴图/选区会退化为普通窗口）"
-msgstr ""
-
-#: src/dustshot/cli.py:707
-msgid "已预加载"
-msgstr ""
-
-#: src/dustshot/cli.py:709
-msgid "缺少库，功能会退化"
-msgstr ""
-
-#: src/dustshot/cli.py:709
-msgid "需要时会自动重新执行以预加载"
-msgstr ""
-
-#: src/dustshot/cli.py:710
-msgid "layer-shell 预加载"
-msgstr ""
-
 #: src/dustshot/cli.py:719
-msgid "OCR 语言包"
+msgid "可以用 niri 自带的截图界面（--backend niri）"
 msgstr ""
 
-#: src/dustshot/cli.py:719
-msgid "未安装（tesseract-data-eng 等）"
+#: src/dustshot/cli.py:721
+msgid "沙箱里连不上 niri 的 IPC"
+msgstr ""
+
+#: src/dustshot/cli.py:725
+msgid "IPC 没有响应（NIRI_SOCKET）"
 msgstr ""
 
 #: src/dustshot/cli.py:726 src/dustshot/cli.py:728
+msgid "niri 截图后端（--backend niri）"
+msgstr ""
+
+#: src/dustshot/cli.py:731
+msgid "wl-copy/wl-paste（剪贴板）"
+msgstr ""
+
+#: src/dustshot/cli.py:735
+msgid "录制后端（wf-recorder / gpu-screen-recorder）"
+msgstr ""
+
+#: src/dustshot/cli.py:737
+msgid "ffmpeg（GIF 转换）"
+msgstr ""
+
+#: src/dustshot/cli.py:746
+msgid "不可用"
+msgstr ""
+
+#: src/dustshot/cli.py:767
+msgid "未安装（贴图/选区会退化为普通窗口）"
+msgstr ""
+
+#: src/dustshot/cli.py:769
+msgid "已预加载"
+msgstr ""
+
+#: src/dustshot/cli.py:771
+msgid "缺少库，功能会退化"
+msgstr ""
+
+#: src/dustshot/cli.py:771
+msgid "需要时会自动重新执行以预加载"
+msgstr ""
+
+#: src/dustshot/cli.py:772
+msgid "layer-shell 预加载"
+msgstr ""
+
+#: src/dustshot/cli.py:781
+msgid "OCR 语言包"
+msgstr ""
+
+#: src/dustshot/cli.py:781
+msgid "未安装（tesseract-data-eng 等）"
+msgstr ""
+
+#: src/dustshot/cli.py:788 src/dustshot/cli.py:790
 msgid "保存目录可写"
 msgstr ""
 
-#: src/dustshot/cli.py:739
+#: src/dustshot/cli.py:801
 #, python-brace-format
 msgid "{failures} 项需要处理；缺少的可选依赖只影响对应功能。"
 msgstr ""
 
-#: src/dustshot/cli.py:741
+#: src/dustshot/cli.py:803
 msgid "环境看起来一切正常。"
 msgstr ""
 
-#: src/dustshot/cli.py:781
+#: src/dustshot/cli.py:843
 msgid "命令"
 msgstr ""
 
-#: src/dustshot/cli.py:784
+#: src/dustshot/cli.py:846
 msgid "截完立刻打开编辑器"
 msgstr ""
 
-#: src/dustshot/cli.py:785
+#: src/dustshot/cli.py:847
 msgid "截完不打开编辑器"
 msgstr ""
 
-#: src/dustshot/cli.py:786
+#: src/dustshot/cli.py:848
 msgid "截完把图片钉在屏幕上"
 msgstr ""
 
-#: src/dustshot/cli.py:787
+#: src/dustshot/cli.py:849
 msgid "贴图初始位置（配合 --pin）"
 msgstr ""
 
-#: src/dustshot/cli.py:789
+#: src/dustshot/cli.py:851
 msgid "贴图初始缩放（配合 --pin）"
 msgstr ""
 
-#: src/dustshot/cli.py:791 src/dustshot/cli.py:852
+#: src/dustshot/cli.py:853 src/dustshot/cli.py:922
 msgid "本次保存目录"
 msgstr ""
 
-#: src/dustshot/cli.py:792 src/dustshot/cli.py:856
+#: src/dustshot/cli.py:854 src/dustshot/cli.py:926
 msgid "本次保存格式"
 msgstr ""
 
-#: src/dustshot/cli.py:793 src/dustshot/cli.py:858
+#: src/dustshot/cli.py:855 src/dustshot/cli.py:928
 msgid "本次不复制到剪贴板"
 msgstr ""
 
-#: src/dustshot/cli.py:794
+#: src/dustshot/cli.py:856
 msgid "截图前延时"
 msgstr ""
 
-#: src/dustshot/cli.py:795 src/dustshot/cli.py:849
+#: src/dustshot/cli.py:857 src/dustshot/cli.py:919
 msgid "直接截取指定区域（不弹选区）"
 msgstr ""
 
-#: src/dustshot/cli.py:800
-msgid "截图后端：auto 优先 grim，没有 grim 时用 ScreenCast portal"
-msgstr ""
-
-#: src/dustshot/cli.py:803
-msgid "框选截图（默认命令）"
-msgstr ""
-
-#: src/dustshot/cli.py:806
-msgid "截取所有输出"
-msgstr ""
-
-#: src/dustshot/cli.py:809
-msgid "同 region"
-msgstr ""
-
-#: src/dustshot/cli.py:812
-msgid "打开编辑器编辑已有图片"
-msgstr ""
-
-#: src/dustshot/cli.py:813
-msgid "图片路径，- 表示从标准输入读取"
-msgstr ""
-
-#: src/dustshot/cli.py:815
-msgid "把图片钉在屏幕上"
-msgstr ""
-
-#: src/dustshot/cli.py:816 src/dustshot/cli.py:821 src/dustshot/cli.py:874
-#: src/dustshot/cli.py:886
-msgid "图片路径；省略时先框选截图"
-msgstr ""
-
-#: src/dustshot/cli.py:817
-msgid "初始位置（默认 140,140）"
-msgstr ""
-
-#: src/dustshot/cli.py:818
-msgid "初始缩放（默认 1.0）"
-msgstr ""
-
-#: src/dustshot/cli.py:820
-msgid "识别图片或框选区域的文字"
-msgstr ""
-
-#: src/dustshot/cli.py:822
-msgid "语言，例如 eng+chi_sim"
-msgstr ""
-
-#: src/dustshot/cli.py:823 src/dustshot/cli.py:888
-msgid "tesseract 页面分割模式（默认 6）"
-msgstr ""
-
-#: src/dustshot/cli.py:824 src/dustshot/cli.py:882
-msgid "把识别结果复制到剪贴板"
-msgstr ""
-
-#: src/dustshot/cli.py:825
-msgid "输出带词框的 JSON"
-msgstr ""
-
-#: src/dustshot/cli.py:827
-msgid "滚动截图：连续截图并自动拼接成长图"
-msgstr ""
-
-#: src/dustshot/cli.py:828
-msgid "截图帧数（默认 5）"
-msgstr ""
-
-#: src/dustshot/cli.py:832
-msgid "自动滚动后端（默认自动选择）"
-msgstr ""
-
-#: src/dustshot/cli.py:834
-msgid "自己滚动，每滚一屏按回车继续"
-msgstr ""
-
-#: src/dustshot/cli.py:840
-msgid "最小重叠行数（默认 24）"
-msgstr ""
-
-#: src/dustshot/cli.py:847
-msgid "每滚一屏后等待画面稳定的秒数（默认 0.35）"
-msgstr ""
-
-#: src/dustshot/cli.py:850
-msgid "拼接完打开编辑器"
-msgstr ""
-
-#: src/dustshot/cli.py:851
-msgid "拼接完不打开编辑器"
-msgstr ""
-
-#: src/dustshot/cli.py:859
-msgid "开始前延时"
-msgstr ""
-
-#: src/dustshot/cli.py:860 src/dustshot/cli.py:871 src/dustshot/cli.py:896
-msgid "输出文件路径"
-msgstr ""
-
 #: src/dustshot/cli.py:862
-msgid "录制屏幕（可转 GIF）"
-msgstr ""
-
-#: src/dustshot/cli.py:863
-msgid "录制整个桌面，不框选"
-msgstr ""
-
-#: src/dustshot/cli.py:864
-msgid "帧率"
-msgstr ""
-
-#: src/dustshot/cli.py:865
-msgid "录制系统音频（需要 wf-recorder）"
-msgstr ""
-
-#: src/dustshot/cli.py:866
-msgid "录制结束后转成 GIF"
+msgid ""
+"截图后端：auto 优先 grim；niri 用 niri 自带的截图界面；portal 走 ScreenCast"
 msgstr ""
 
 #: src/dustshot/cli.py:867
-msgid "GIF 帧率"
-msgstr ""
-
-#: src/dustshot/cli.py:868
-msgid "GIF 宽度"
-msgstr ""
-
-#: src/dustshot/cli.py:869
-msgid "最长录制秒数"
+msgid "从剪贴板读取图片（例如 niri 刚截好的图）"
 msgstr ""
 
 #: src/dustshot/cli.py:870
-msgid "指定录制后端"
+msgid "框选截图（默认命令）"
 msgstr ""
 
 #: src/dustshot/cli.py:873
-msgid "识别图片或框选区域的二维码/条码"
+msgid "截取所有输出"
+msgstr ""
+
+#: src/dustshot/cli.py:876
+msgid "同 region"
+msgstr ""
+
+#: src/dustshot/cli.py:879
+msgid "打开编辑器编辑已有图片"
 msgstr ""
 
 #: src/dustshot/cli.py:880
-msgid "解码命令（默认 zbarimg）"
+msgid "图片路径，- 表示从标准输入读取；省略时配合 --clipboard"
 msgstr ""
 
-#: src/dustshot/cli.py:883 src/dustshot/cli.py:904
-msgid "以 JSON 输出"
+#: src/dustshot/cli.py:883
+msgid "把图片钉在屏幕上"
 msgstr ""
 
-#: src/dustshot/cli.py:885
-msgid "找出并遮住图片中的敏感文字"
+#: src/dustshot/cli.py:884 src/dustshot/cli.py:890 src/dustshot/cli.py:944
+#: src/dustshot/cli.py:957
+msgid "图片路径；省略时先框选截图"
+msgstr ""
+
+#: src/dustshot/cli.py:886
+msgid "初始位置（默认 140,140）"
 msgstr ""
 
 #: src/dustshot/cli.py:887
-msgid "OCR 语言，默认取设置"
+msgid "初始缩放（默认 1.0）"
 msgstr ""
 
 #: src/dustshot/cli.py:889
-msgid "只查找这些类型，逗号分隔"
+msgid "识别图片或框选区域的文字"
 msgstr ""
 
-#: src/dustshot/cli.py:891
-msgid "遮住方式"
+#: src/dustshot/cli.py:892
+msgid "语言，例如 eng+chi_sim"
 msgstr ""
 
-#: src/dustshot/cli.py:893
-msgid "每块外扩像素（默认 4）"
+#: src/dustshot/cli.py:893 src/dustshot/cli.py:960
+msgid "tesseract 页面分割模式（默认 6）"
 msgstr ""
 
-#: src/dustshot/cli.py:894
-msgid "马赛克块大小"
+#: src/dustshot/cli.py:894 src/dustshot/cli.py:953
+msgid "把识别结果复制到剪贴板"
 msgstr ""
 
 #: src/dustshot/cli.py:895
-msgid "在编辑器里打开结果"
+msgid "输出带词框的 JSON"
 msgstr ""
 
 #: src/dustshot/cli.py:897
-msgid "把脱敏后的图片复制到剪贴板"
+msgid "滚动截图：连续截图并自动拼接成长图"
 msgstr ""
 
 #: src/dustshot/cli.py:898
-msgid "以 JSON 输出命中的内容"
-msgstr ""
-
-#: src/dustshot/cli.py:900
-msgid "在系统托盘里驻留一个图标"
+msgid "截图帧数（默认 5）"
 msgstr ""
 
 #: src/dustshot/cli.py:902
-msgid "查看截图历史"
+msgid "自动滚动后端（默认自动选择）"
 msgstr ""
 
-#: src/dustshot/cli.py:903
-msgid "显示条数（默认 20）"
-msgstr ""
-
-#: src/dustshot/cli.py:905
-msgid "清空历史记录"
-msgstr ""
-
-#: src/dustshot/cli.py:906
-msgid "打开可浏览的历史窗口"
-msgstr ""
-
-#: src/dustshot/cli.py:908
-msgid "查看或修改设置"
-msgstr ""
-
-#: src/dustshot/cli.py:909
-msgid "打印全部设置（JSON）"
+#: src/dustshot/cli.py:904
+msgid "自己滚动，每滚一屏按回车继续"
 msgstr ""
 
 #: src/dustshot/cli.py:910
-msgid "段.字段=值"
-msgstr ""
-
-#: src/dustshot/cli.py:910
-msgid "修改一项设置，可重复"
-msgstr ""
-
-#: src/dustshot/cli.py:911
-msgid "恢复默认设置"
-msgstr ""
-
-#: src/dustshot/cli.py:913
-msgid "生成桌面快捷键配置片段"
-msgstr ""
-
-#: src/dustshot/cli.py:914
-msgid "指定合成器"
-msgstr ""
-
-#: src/dustshot/cli.py:916
-msgid "检查运行环境"
+msgid "最小重叠行数（默认 24）"
 msgstr ""
 
 #: src/dustshot/cli.py:917
-msgid "显示版本"
+msgid "每滚一屏后等待画面稳定的秒数（默认 0.35）"
+msgstr ""
+
+#: src/dustshot/cli.py:920
+msgid "拼接完打开编辑器"
+msgstr ""
+
+#: src/dustshot/cli.py:921
+msgid "拼接完不打开编辑器"
 msgstr ""
 
 #: src/dustshot/cli.py:929
+msgid "开始前延时"
+msgstr ""
+
+#: src/dustshot/cli.py:930 src/dustshot/cli.py:941 src/dustshot/cli.py:968
+msgid "输出文件路径"
+msgstr ""
+
+#: src/dustshot/cli.py:932
+msgid "录制屏幕（可转 GIF）"
+msgstr ""
+
+#: src/dustshot/cli.py:933
+msgid "录制整个桌面，不框选"
+msgstr ""
+
+#: src/dustshot/cli.py:934
+msgid "帧率"
+msgstr ""
+
+#: src/dustshot/cli.py:935
+msgid "录制系统音频（需要 wf-recorder）"
+msgstr ""
+
+#: src/dustshot/cli.py:936
+msgid "录制结束后转成 GIF"
+msgstr ""
+
+#: src/dustshot/cli.py:937
+msgid "GIF 帧率"
+msgstr ""
+
+#: src/dustshot/cli.py:938
+msgid "GIF 宽度"
+msgstr ""
+
+#: src/dustshot/cli.py:939
+msgid "最长录制秒数"
+msgstr ""
+
+#: src/dustshot/cli.py:940
+msgid "指定录制后端"
+msgstr ""
+
+#: src/dustshot/cli.py:943
+msgid "识别图片或框选区域的二维码/条码"
+msgstr ""
+
+#: src/dustshot/cli.py:951
+msgid "解码命令（默认 zbarimg）"
+msgstr ""
+
+#: src/dustshot/cli.py:954 src/dustshot/cli.py:976
+msgid "以 JSON 输出"
+msgstr ""
+
+#: src/dustshot/cli.py:956
+msgid "找出并遮住图片中的敏感文字"
+msgstr ""
+
+#: src/dustshot/cli.py:959
+msgid "OCR 语言，默认取设置"
+msgstr ""
+
+#: src/dustshot/cli.py:961
+msgid "只查找这些类型，逗号分隔"
+msgstr ""
+
+#: src/dustshot/cli.py:963
+msgid "遮住方式"
+msgstr ""
+
+#: src/dustshot/cli.py:965
+msgid "每块外扩像素（默认 4）"
+msgstr ""
+
+#: src/dustshot/cli.py:966
+msgid "马赛克块大小"
+msgstr ""
+
+#: src/dustshot/cli.py:967
+msgid "在编辑器里打开结果"
+msgstr ""
+
+#: src/dustshot/cli.py:969
+msgid "把脱敏后的图片复制到剪贴板"
+msgstr ""
+
+#: src/dustshot/cli.py:970
+msgid "以 JSON 输出命中的内容"
+msgstr ""
+
+#: src/dustshot/cli.py:972
+msgid "在系统托盘里驻留一个图标"
+msgstr ""
+
+#: src/dustshot/cli.py:974
+msgid "查看截图历史"
+msgstr ""
+
+#: src/dustshot/cli.py:975
+msgid "显示条数（默认 20）"
+msgstr ""
+
+#: src/dustshot/cli.py:977
+msgid "清空历史记录"
+msgstr ""
+
+#: src/dustshot/cli.py:978
+msgid "打开可浏览的历史窗口"
+msgstr ""
+
+#: src/dustshot/cli.py:980
+msgid "查看或修改设置"
+msgstr ""
+
+#: src/dustshot/cli.py:981
+msgid "打印全部设置（JSON）"
+msgstr ""
+
+#: src/dustshot/cli.py:982
+msgid "段.字段=值"
+msgstr ""
+
+#: src/dustshot/cli.py:982
+msgid "修改一项设置，可重复"
+msgstr ""
+
+#: src/dustshot/cli.py:983
+msgid "恢复默认设置"
+msgstr ""
+
+#: src/dustshot/cli.py:985
+msgid "生成桌面快捷键配置片段"
+msgstr ""
+
+#: src/dustshot/cli.py:986
+msgid "指定合成器"
+msgstr ""
+
+#: src/dustshot/cli.py:988
+msgid "检查运行环境"
+msgstr ""
+
+#: src/dustshot/cli.py:989
+msgid "显示版本"
+msgstr ""
+
+#: src/dustshot/cli.py:1001
 #, python-brace-format
 msgid "未知命令：{command}"
 msgstr ""
 
-#: src/dustshot/cli.py:947
+#: src/dustshot/cli.py:1019
 #, python-brace-format
 msgid "出错：{exc}"
 msgstr ""
@@ -848,330 +929,326 @@ msgstr ""
 msgid "录制出错：{recording_error}"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:38
+#: src/dustshot/ui/canvas.py:39
 msgid "选择"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:39
+#: src/dustshot/ui/canvas.py:40
 msgid "矩形"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:40
+#: src/dustshot/ui/canvas.py:41
 msgid "椭圆"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:41
+#: src/dustshot/ui/canvas.py:42
 msgid "直线"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:42
+#: src/dustshot/ui/canvas.py:43
 msgid "箭头"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:43
+#: src/dustshot/ui/canvas.py:44
 msgid "画笔"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:44
+#: src/dustshot/ui/canvas.py:45
 msgid "荧光笔"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:45
+#: src/dustshot/ui/canvas.py:46
 msgid "文字"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:46
+#: src/dustshot/ui/canvas.py:47
 msgid "序号"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:47
+#: src/dustshot/ui/canvas.py:48
 msgid "马赛克"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:48
+#: src/dustshot/ui/canvas.py:49
 msgid "模糊"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:49
+#: src/dustshot/ui/canvas.py:50
 msgid "裁剪"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:59
+#: src/dustshot/ui/canvas.py:60
 msgid "拖动图元移动，拖手柄缩放；Delete 删除"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:60
+#: src/dustshot/ui/canvas.py:61
 msgid "拖动绘制矩形"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:61
+#: src/dustshot/ui/canvas.py:62
 msgid "拖动绘制椭圆"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:62
+#: src/dustshot/ui/canvas.py:63
 msgid "拖动绘制直线"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:63
+#: src/dustshot/ui/canvas.py:64
 msgid "拖动绘制箭头"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:64
+#: src/dustshot/ui/canvas.py:65
 msgid "按住拖动自由绘制"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:65
+#: src/dustshot/ui/canvas.py:66
 msgid "按住拖动绘制荧光笔"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:66
+#: src/dustshot/ui/canvas.py:67
 msgid "单击后输入文字，回车确认"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:67
+#: src/dustshot/ui/canvas.py:68
 msgid "单击添加递增序号"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:68
+#: src/dustshot/ui/canvas.py:69
 msgid "拖动框选马赛克区域"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:69
+#: src/dustshot/ui/canvas.py:70
 msgid "拖动框选模糊区域"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:70
+#: src/dustshot/ui/canvas.py:71
 msgid "拖动框选要保留的区域，回车应用"
 msgstr ""
 
-#: src/dustshot/ui/canvas.py:571
+#: src/dustshot/ui/canvas.py:572
 msgid "输入文字后回车"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:41
+#: src/dustshot/ui/editor.py:42
 msgid "Dustshot 编辑器"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:49
+#: src/dustshot/ui/editor.py:50
 msgid "撤销"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:49
+#: src/dustshot/ui/editor.py:50
 msgid "撤销 (Ctrl+Z)"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:50
+#: src/dustshot/ui/editor.py:51
 msgid "重做"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:50
+#: src/dustshot/ui/editor.py:51
 msgid "重做 (Ctrl+Shift+Z)"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:51 src/dustshot/ui/history_window.py:142
-#: src/dustshot/ui/pin.py:120
+#: src/dustshot/ui/editor.py:52 src/dustshot/ui/history_window.py:142
+#: src/dustshot/ui/pin.py:121
 msgid "复制"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:51
+#: src/dustshot/ui/editor.py:52
 msgid "复制到剪贴板 (Ctrl+C)"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:52 src/dustshot/ui/pin.py:121
+#: src/dustshot/ui/editor.py:53 src/dustshot/ui/pin.py:122
 msgid "保存"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:52
+#: src/dustshot/ui/editor.py:53
 msgid "保存为文件 (Ctrl+S)"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:53
+#: src/dustshot/ui/editor.py:54
 msgid "保存并复制"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:53
+#: src/dustshot/ui/editor.py:54
 msgid "保存、复制并关闭"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:54 src/dustshot/ui/history_window.py:143
-#: src/dustshot/ui/pin.py:122
+#: src/dustshot/ui/editor.py:55 src/dustshot/ui/history_window.py:143
+#: src/dustshot/ui/pin.py:123
 msgid "贴图"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:54
+#: src/dustshot/ui/editor.py:55
 msgid "把当前图像贴到屏幕 (Ctrl+P)"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:55
+#: src/dustshot/ui/editor.py:56
 msgid "识别图中的文字"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:56
+#: src/dustshot/ui/editor.py:57
 msgid "脱敏"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:56
+#: src/dustshot/ui/editor.py:57
 msgid "自动遮住邮箱、电话、证件号等敏感文字"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:57 src/dustshot/ui/history_window.py:77
-#: src/dustshot/ui/pin.py:123
+#: src/dustshot/ui/editor.py:58 src/dustshot/ui/history_window.py:77
+#: src/dustshot/ui/pin.py:124
 msgid "关闭"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:57
+#: src/dustshot/ui/editor.py:58
 msgid "关闭 (Ctrl+W)"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:78
+#: src/dustshot/ui/editor.py:79
 msgid "就绪"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:96
+#: src/dustshot/ui/editor.py:97
 #, python-brace-format
 msgid "就绪  |  {tool}"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:127
+#: src/dustshot/ui/editor.py:128
 msgid "粗细"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:133
+#: src/dustshot/ui/editor.py:134
 msgid "字号"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:143
+#: src/dustshot/ui/editor.py:144
 msgid "清除"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:143
+#: src/dustshot/ui/editor.py:144
 msgid "删除全部标注"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:144
+#: src/dustshot/ui/editor.py:145
 msgid "删除所选"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:144
+#: src/dustshot/ui/editor.py:145
 msgid "删除选中的图元 (Delete)"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:147
+#: src/dustshot/ui/editor.py:148
 msgid "应用裁剪"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:147
+#: src/dustshot/ui/editor.py:148
 msgid "把画面裁剪到框选区域 (回车)"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:148
+#: src/dustshot/ui/editor.py:149
 msgid "左转"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:148
+#: src/dustshot/ui/editor.py:149
 msgid "逆时针旋转 90 度 (Ctrl+Left)"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:149
+#: src/dustshot/ui/editor.py:150
 msgid "右转"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:149
+#: src/dustshot/ui/editor.py:150
 msgid "顺时针旋转 90 度 (Ctrl+Right)"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:209
+#: src/dustshot/ui/editor.py:210
 msgid "已撤销"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:211
+#: src/dustshot/ui/editor.py:212
 msgid "没有可撤销的操作"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:217
+#: src/dustshot/ui/editor.py:218
 msgid "已重做"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:219
+#: src/dustshot/ui/editor.py:220
 msgid "没有可重做的操作"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:225
+#: src/dustshot/ui/editor.py:226
 msgid "已清除全部标注"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:230
+#: src/dustshot/ui/editor.py:231
 msgid "还没有框选裁剪区域"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:233
+#: src/dustshot/ui/editor.py:234
 msgid "裁剪区域无效，图像没有改变"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:236
+#: src/dustshot/ui/editor.py:237
 #, python-brace-format
 msgid "已裁剪为 {width} x {height}"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:242
+#: src/dustshot/ui/editor.py:243
 msgid "没有可旋转的画面"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:248
+#: src/dustshot/ui/editor.py:249
 #, python-brace-format
 msgid "已旋转为 {width} x {height}"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:254
+#: src/dustshot/ui/editor.py:255
 msgid "复制失败，请检查 wl-clipboard"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:268
+#: src/dustshot/ui/editor.py:269
 #, python-brace-format
 msgid "已保存 {path}"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:283
+#: src/dustshot/ui/editor.py:284
 msgid "已贴图，可拖动移动、滚轮缩放"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:288
-msgid "剪贴板里没有图片"
-msgstr ""
-
-#: src/dustshot/ui/editor.py:296
+#: src/dustshot/ui/editor.py:297
 #, python-brace-format
 msgid "已粘贴剪贴板图片 {width} x {height}"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:310
+#: src/dustshot/ui/editor.py:311
 msgid "正在识别文字…"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:318
+#: src/dustshot/ui/editor.py:319
 msgid "(没有识别到文字)"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:320
+#: src/dustshot/ui/editor.py:321
 #, python-brace-format
 msgid "识别失败：{exc}"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:329
+#: src/dustshot/ui/editor.py:330
 #, python-brace-format
 msgid "识别完成，共 {count} 个字符"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:337
+#: src/dustshot/ui/editor.py:338
 msgid "正在查找敏感信息…"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:350
+#: src/dustshot/ui/editor.py:351
 #, python-brace-format
 msgid "查找失败：{exc}"
 msgstr ""
 
-#: src/dustshot/ui/editor.py:369
+#: src/dustshot/ui/editor.py:370
 #, python-brace-format
 msgid "已遮住 {count} 处敏感信息"
 msgstr ""
@@ -1208,7 +1285,7 @@ msgstr ""
 msgid "文件已不存在"
 msgstr ""
 
-#: src/dustshot/ui/history_window.py:141 src/dustshot/ui/pin.py:119
+#: src/dustshot/ui/history_window.py:141 src/dustshot/ui/pin.py:120
 msgid "编辑"
 msgstr ""
 
@@ -1216,7 +1293,7 @@ msgstr ""
 msgid "在编辑器里打开"
 msgstr ""
 
-#: src/dustshot/ui/history_window.py:142 src/dustshot/ui/pin.py:120
+#: src/dustshot/ui/history_window.py:142 src/dustshot/ui/pin.py:121
 msgid "复制到剪贴板"
 msgstr ""
 
@@ -1240,51 +1317,51 @@ msgstr ""
 msgid "从历史记录里移除"
 msgstr ""
 
-#: src/dustshot/ui/pin.py:118
+#: src/dustshot/ui/pin.py:119
 msgid "恢复原始大小"
 msgstr ""
 
-#: src/dustshot/ui/pin.py:119
+#: src/dustshot/ui/pin.py:120
 msgid "在编辑器里继续修改这张贴图 (Ctrl+E)"
 msgstr ""
 
-#: src/dustshot/ui/pin.py:121
+#: src/dustshot/ui/pin.py:122
 msgid "保存为文件"
 msgstr ""
 
-#: src/dustshot/ui/pin.py:122
+#: src/dustshot/ui/pin.py:123
 msgid "再贴一张"
 msgstr ""
 
-#: src/dustshot/ui/pin.py:123
+#: src/dustshot/ui/pin.py:124
 msgid "关闭 (Esc)"
 msgstr ""
 
-#: src/dustshot/ui/pin.py:130
+#: src/dustshot/ui/pin.py:131
 msgid "居中"
 msgstr ""
 
-#: src/dustshot/ui/pin.py:131
+#: src/dustshot/ui/pin.py:132
 msgid "把贴图移到屏幕中央"
 msgstr ""
 
-#: src/dustshot/ui/pin.py:135
+#: src/dustshot/ui/pin.py:136
 msgid "联动"
 msgstr ""
 
-#: src/dustshot/ui/pin.py:136
+#: src/dustshot/ui/pin.py:137
 msgid "与其他开启联动的贴图一起移动和缩放"
 msgstr ""
 
-#: src/dustshot/ui/pin.py:140
+#: src/dustshot/ui/pin.py:141
 msgid "穿透"
 msgstr ""
 
-#: src/dustshot/ui/pin.py:141
+#: src/dustshot/ui/pin.py:142
 msgid "只让下方工具条响应鼠标，图片区域点击穿透"
 msgstr ""
 
-#: src/dustshot/ui/pin.py:148
+#: src/dustshot/ui/pin.py:149
 msgid "不透明度"
 msgstr ""
 

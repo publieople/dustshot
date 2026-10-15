@@ -1,6 +1,6 @@
 # Roadmap
 
-Dustshot is built in six milestones. This file records what each one covers, how far it has
+Dustshot is built in seven milestones. This file records what each one covers, how far it has
 come, and what is deliberately left out. Status legend: **done**, **partial**, **planned**.
 
 ## M0 — Foundations  (done)
@@ -103,6 +103,21 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
   output, and `dustshot doctor` reports the sandbox. The default save directory follows the host
   XDG pictures folder (the manifest grants `xdg-config/user-dirs.dirs` read-only, since a sandbox
   home is private and would otherwise swallow every default capture).
+
+## M6 — Working with niri's own screenshot UI  (done)
+
+- done: `--backend niri` hands region selection to niri's built-in picker (`niri msg action
+  screenshot --path <file>`), waits for the file it writes and returns the picture to the normal
+  capture pipeline (`capture/niri.py`); the picker's own Escape / Space handling is what decides
+  whether a capture happens.
+- done: `full --backend niri` captures every output without any UI, through
+  `niri msg action screenshot-screen --write-to-disk false` and the clipboard frame it publishes.
+- done: `--clipboard` on `edit`, `pin`, `ocr`, `codes` and `redact` consumes the picture niri just
+  copied, so an existing niri keybinding can feed dustshot's extras.
+- `--rect` is rejected together with `--backend niri` (niri picks the region in its own UI), and the
+  backend is unavailable inside a Flatpak sandbox, where niri's IPC socket is out of reach.
+- The shipped niri hotkey template follows that split now: Mod+Print opens niri's picker, and the
+  other bindings edit / OCR / pin / record what niri copied.
 
 ## Deliberately out of scope
 

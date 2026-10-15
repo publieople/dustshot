@@ -8,6 +8,7 @@ what lets the test suite and CI run headless.
 | `dustshot/config.py` | `Settings` dataclasses, palette defaults, JSON store under XDG dirs |
 | `dustshot/capture/base.py` | `Geometry`, `OutputInfo`, `Frame`; logical/physical scale maths |
 | `dustshot/capture/screencopy.py` | output discovery (`niri msg`), frames (`grim`), region capture |
+| `dustshot/capture/niri.py` | niri's own screenshot picker: IPC request, file wait, clipboard fallback |
 | `dustshot/capture/portal.py` | ScreenCast portal client and PipeWire frame grabbing |
 | `dustshot/capture/edges.py` | window / control border detection for selection snapping |
 | `dustshot/selection.py` | the region state machine (new / move / resize, handles, snapping, clamping) |

@@ -76,6 +76,11 @@ output, starts a recording, or opens the capture history.*
   (CreateSession / SelectSources / Start / OpenPipeWireRemote) and grabs each shared monitor
   through GStreamer and PipeWire, so region and full captures work on compositors without
   wlr-screencopy too; compositors that only publish DMA-BUF streams are imported through GL.
+- **niri's own picker**: `--backend niri` asks niri to open its built-in screenshot UI, takes the
+  file niri saves and feeds it to the editor, OCR, redaction, pinning or history, so the selection
+  comes from niri and only the extras come from dustshot. `--clipboard` reads whatever niri copied
+  into any command that takes a picture (`edit`, `pin`, `ocr`, `codes`, `redact`). niri cannot
+  tell us when the picker is cancelled, so `region --backend niri` waits for its timeout after Esc.
 - **Tray icon**: `dustshot tray` publishes a StatusNotifierItem icon whose dbusmenu captures a
   region or the whole output, starts a recording, opens the capture history, or quits; every row
   runs the matching CLI command in its own process.
@@ -92,6 +97,7 @@ Dustshot is a Wayland-native tool and has **no X11 backend**.
 | Desktop / compositor | Capture | Overlay and pins | Notes |
 | --- | --- | --- | --- |
 | niri, Hyprland, Sway, other wlroots-style | `grim` (wlr-screencopy) | wlr-layer-shell: a real full-screen overlay and always-on-top pins | The complete experience; scrolling capture drives the page with wtype / ydotool |
+| niri, keeping its own picker | `--backend niri` (niri's screenshot UI) | Same as above | Select in niri, press Space, and dustshot opens the result in the editor; `--clipboard` picks up what niri just copied |
 | GNOME (Mutter), KDE Plasma (KWin) | `--backend portal` (ScreenCast + PipeWire) | No layer-shell, so the overlay and the pins become ordinary windows | The first capture asks for screen-sharing permission in the portal dialog |
 | A Flatpak sandbox | Forced to the portal (the security context hides wlr-screencopy) | Degrades the same way | Build and sandbox differences: [packaging/README.md](packaging/README.md) |
 | An X11 session | Not supported | — | grim and layer-shell are Wayland protocols |
@@ -165,6 +171,8 @@ flatpak run io.github.publieople.Dustshot full
 dustshot                     # region capture, straight into the editor
 dustshot full                # whole output, into the editor
 dustshot full --backend portal  # same, through the ScreenCast portal
+dustshot region --backend niri  # select the region in niri's own screenshot UI
+dustshot edit --clipboard     # edit the picture niri just copied
 dustshot capture --no-editor # capture and just save/copy
 dustshot edit IMAGE          # open the editor on an existing file
 dustshot pin IMAGE           # pin an image on the screen
@@ -183,8 +191,9 @@ dustshot doctor              # check dependencies and environment
 dustshot version
 ```
 
-Useful flags: `--rect 100,100,800,600` to skip the overlay, `--backend auto|grim|portal`,
-`--dir`, `--format`, `--no-copy`, `--delay SECONDS`, `--pin`, `--position X,Y`, `--scale`. Run
+Useful flags: `--rect 100,100,800,600` to skip the overlay, `--backend auto|grim|portal|niri`,
+`--clipboard` to take the picture from the clipboard instead of the screen, `--dir`, `--format`,
+`--no-copy`, `--delay SECONDS`, `--pin`, `--position X,Y`, `--scale`. Run
 `dustshot COMMAND --help` for the full list.
 
 ## Shortcuts

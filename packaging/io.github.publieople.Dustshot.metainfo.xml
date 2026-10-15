@@ -48,6 +48,12 @@
   </screenshots>
 
   <releases>
+    <release version="0.3.0" date="2026-10-15">
+      <description>
+        <p>Hand region selection to niri's own screenshot UI with --backend niri, and let edit, pin,
+          OCR, barcode and redaction commands read the picture niri just copied with --clipboard.</p>
+      </description>
+    </release>
     <release version="0.2.0" date="2026-10-15">
       <description>
         <p>Snap a region to the borders of the windows and controls behind it, crop and rotate the

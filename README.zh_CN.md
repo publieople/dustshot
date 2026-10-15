@@ -68,6 +68,10 @@ wlr-layer-shell，所以在 wlroots 系合成器（niri、Hyprland、Sway 等）
   （CreateSession / SelectSources / Start / OpenPipeWireRemote），再通过 GStreamer 与 PipeWire
   抓取每个被共享的显示器，所以在没有 wlr-screencopy 的合成器上也能区域或全屏截图；只提供
   DMA-BUF 流的合成器会走 GL 导入。
+- **niri 自带截图界面**：`--backend niri` 让 niri 打开它自己的截图界面，拿到 niri 保存的文件后交给
+  编辑器、OCR、脱敏、贴图或历史记录，选区交给 niri，dustshot 只补它没有的功能；`--clipboard`
+  让 `edit`、`pin`、`ocr`、`codes`、`redact` 直接读取 niri 刚复制到剪贴板里的图。niri 不会告诉我们
+  截图界面被取消了，所以在界面里按 Esc 后 `region --backend niri` 会等到超时才结束。
 - **托盘图标**：`dustshot tray` 发布一个 StatusNotifierItem 图标，dbusmenu 菜单可以截区域或
   全屏、开始录制、打开截图历史、退出；每一行都在自己的进程里执行对应的 CLI 命令。
 - **多语言界面**：界面文字都走 gettext，`po/` 里的英文目录会编译进 `src/dustshot/locale/`，
@@ -82,6 +86,7 @@ Dustshot 是 Wayland 原生工具，**没有 X11 后端**。
 | 桌面 / 合成器 | 截图方式 | 覆盖层与贴图 | 说明 |
 | --- | --- | --- | --- |
 | niri、Hyprland、Sway 等 wlroots 系 | `grim`（wlr-screencopy） | 走 wlr-layer-shell：真正的全屏覆盖层与置顶贴图 | 体验最完整；滚动截图的自动翻页用 wtype / ydotool |
+| niri（继续用它自己的截图界面） | `--backend niri`（niri 的截图 UI） | 同上 | 在 niri 里选好区域按 Space，dustshot 拿结果进编辑器；`--clipboard` 直接读 niri 刚复制的图 |
 | GNOME（Mutter）、KDE Plasma（KWin） | `--backend portal`（ScreenCast + PipeWire） | 没有 layer-shell，覆盖层与贴图退化成普通窗口 | 第一次截图需要在 portal 对话框里授权共享屏幕 |
 | Flatpak 沙箱 | 强制走 portal（安全上下文会隐藏 wlr-screencopy） | 同上，退化为普通窗口 | 构建与沙箱差异见 [packaging/README.md](packaging/README.md) |
 | X11 会话 | 不支持 | — | grim 与 layer-shell 都是 Wayland 协议 |
@@ -147,6 +152,8 @@ Flatpak manifest 在 `packaging/io.github.publieople.Dustshot.yml`，已经在�
 dustshot                     # 区域截图，直接进入编辑器
 dustshot full                # 整个输出，进入编辑器
 dustshot full --backend portal  # 同上，但走 ScreenCast portal
+dustshot region --backend niri  # 用 niri 自带的截图界面选区域
+dustshot edit --clipboard     # 编辑 niri 刚复制到剪贴板的图
 dustshot capture --no-editor # 只截图，保存/复制，不打开编辑器
 dustshot edit IMAGE          # 用编辑器打开一个已有文件
 dustshot pin IMAGE           # 把一张图片贴到屏幕上
@@ -165,8 +172,9 @@ dustshot doctor              # 检查依赖与环境
 dustshot version
 ```
 
-常用参数：`--rect 100,100,800,600` 跳过覆盖层直接截指定矩形、`--backend auto|grim|portal`、
-`--dir`、`--format`、`--no-copy`、`--delay SECONDS`、`--pin`、`--position X,Y`、`--scale`。
+常用参数：`--rect 100,100,800,600` 跳过覆盖层直接截指定矩形、`--backend auto|grim|portal|niri`、
+`--clipboard` 从剪贴板取图而不是截屏、`--dir`、`--format`、`--no-copy`、`--delay SECONDS`、
+`--pin`、`--position X,Y`、`--scale`。
 完整列表用 `dustshot 命令 --help` 查看。
 
 ## 快捷键

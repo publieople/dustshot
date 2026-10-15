@@ -31,6 +31,8 @@ EPILOG = _("""常用示例：
     dustshot pin shot.png            把已有图片钉在屏幕上
     dustshot codes                   框选并识别二维码/条码
     dustshot redact                 框选并自动遮住敏感信息
+    dustshot region --backend niri   用 niri 自带的截图界面选区域，再进编辑器
+    dustshot edit --clipboard        编辑剪贴板里的图片（例如 niri 刚截好的图）
     dustshot scroll --steps 4         滚动截图并拼接成长图
     dustshot history --gui           浏览截图历史
     dustshot tray                   在系统托盘里驻留一个图标
@@ -94,6 +96,13 @@ def capture_backend(name: str = "auto") -> str:
     if name == "auto" and base.in_flatpak():
         # A sandboxed client gets no wlr-screencopy global, so the portal is the only way out.
         name = "portal"
+    if name == "niri":
+        from .capture import niri
+        from .capture.screencopy import CaptureError
+
+        if not niri.ui_available():
+            raise CaptureError(_("niri 后端不可用：需要正在运行的 niri（Flatpak 沙箱里连不上它的 IPC）"))
+        return "niri"
     if name == "auto" and grim:
         return "grim"
     from .capture import portal
@@ -102,19 +111,35 @@ def capture_backend(name: str = "auto") -> str:
 
 
 def capture_full(backend: str = "auto") -> Any:
-    from .capture import portal, screencopy
+    from .capture import niri, portal, screencopy
 
-    if capture_backend(backend) == "portal":
+    choice = capture_backend(backend)
+    if choice == "portal":
         return portal.capture_all()
+    if choice == "niri":
+        return niri.capture_screen()
     return screencopy.capture_all()
 
 
 def capture_region(region: Any, backend: str = "auto") -> Any:
     from .capture import portal, screencopy
+    from .capture.screencopy import CaptureError
 
-    if capture_backend(backend) == "portal":
+    choice = capture_backend(backend)
+    if choice == "niri":
+        # niri picks the region in its own UI, so there is nothing left to crop here.
+        raise CaptureError(_("niri 后端在它自己的界面里选区域，不能和 --rect 一起用"))
+    if choice == "portal":
         return portal.capture_region(region)
     return screencopy.capture_region(region)
+
+
+def capture_with_niri() -> Any:
+    """Capture through niri's own picker instead of our overlay."""
+
+    from .capture import niri
+
+    return niri.capture_ui()
 
 
 def pick_region(settings: Settings) -> Any:
@@ -207,12 +232,16 @@ def command_capture(args: argparse.Namespace, settings: Settings, store: Setting
     backend = getattr(args, "backend", None) or "auto"
     result = None
     region = None
+    choice = capture_backend(backend)
 
     if explicit:
         region = parse_rect(explicit)
         image = capture_region(region, backend)
     elif args.command == "full":
         image = capture_full(backend)
+    elif choice == "niri":
+        # niri's own picker replaces our overlay and hands back the finished crop.
+        image = capture_with_niri()
     else:
         result = pick_region(settings)
         if result.key == "ctrl-r" and result.region is not None:
@@ -258,33 +287,53 @@ def command_capture(args: argparse.Namespace, settings: Settings, store: Setting
     return 0
 
 
+def source_image(args: argparse.Namespace) -> Any:
+    """The picture named by --clipboard or FILE, or None when the caller has to capture one."""
+
+    if getattr(args, "clipboard", False):
+        image = clipboard.paste_image()
+        if image is None:
+            raise SystemExit(_("剪贴板里没有图片"))
+        return image
+    if getattr(args, "file", None):
+        return load_image(args.file)
+    return None
+
+
+def capture_source(settings: Settings) -> Any:
+    """Capture whatever the user picks, or None when the selection was cancelled."""
+
+    result = pick_region(settings)
+    if not result.confirmed:
+        print(_("已取消"))
+        return None
+    return capture_region(result.region) if result.region is not None else capture_full()
+
+
 def command_edit(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
-    image = load_image(args.file)
-    return open_editor(image, settings, source=str(args.file))
+    image = source_image(args)
+    if image is None:
+        raise SystemExit(_("请给出图片路径或 --clipboard"))
+    source = args.file or ("clipboard" if getattr(args, "clipboard", False) else "")
+    return open_editor(image, settings, source=source)
 
 
 def command_pin(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
-    if args.file:
-        image = load_image(args.file)
-    else:
-        result = pick_region(settings)
-        if not result.confirmed:
-            print(_("已取消"))
+    image = source_image(args)
+    if image is None:
+        image = capture_source(settings)
+        if image is None:
             return 0
-        image = capture_region(result.region) if result.region is not None else capture_full()
     position = parse_point(args.position) if args.position else (140, 140)
     return open_pin(image, settings, position, float(args.scale))
 
 
 def command_ocr(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
-    if args.file:
-        image = load_image(args.file)
-    else:
-        result = pick_region(settings)
-        if not result.confirmed:
-            print(_("已取消"))
+    image = source_image(args)
+    if image is None:
+        image = capture_source(settings)
+        if image is None:
             return 0
-        image = capture_region(result.region) if result.region is not None else capture_full()
 
     languages = args.lang or settings.ocr.languages
     try:
@@ -315,14 +364,11 @@ def command_ocr(args: argparse.Namespace, settings: Settings, store: SettingsSto
 
 
 def command_codes(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
-    if args.file:
-        image = load_image(args.file)
-    else:
-        result = pick_region(settings)
-        if not result.confirmed:
-            print(_("已取消"))
+    image = source_image(args)
+    if image is None:
+        image = capture_source(settings)
+        if image is None:
             return 0
-        image = capture_region(result.region) if result.region is not None else capture_full()
 
     try:
         codes = barcode.decode(image, command=args.decoder)
@@ -348,14 +394,11 @@ def command_redact(args: argparse.Namespace, settings: Settings, store: Settings
     from .annotation.render import render as render_image
     from .annotation.render import render_to_file
 
-    if args.file:
-        image = load_image(args.file)
-    else:
-        result = pick_region(settings)
-        if not result.confirmed:
-            print(_("已取消"))
+    image = source_image(args)
+    if image is None:
+        image = capture_source(settings)
+        if image is None:
             return 0
-        image = capture_region(result.region) if result.region is not None else capture_full()
 
     kinds = (
         tuple(piece.strip() for piece in args.kinds.split(",") if piece.strip())
@@ -405,7 +448,8 @@ def command_redact(args: argparse.Namespace, settings: Settings, store: Settings
     if args.copy:
         clipboard.copy_image(rendered)
     if args.edit:
-        return open_editor(rendered, settings, source=args.file or "")
+        source = args.file or ("clipboard" if getattr(args, "clipboard", False) else "")
+        return open_editor(rendered, settings, source=source)
     return 0
 
 
@@ -578,12 +622,13 @@ def command_settings(args: argparse.Namespace, settings: Settings, store: Settin
 
 HOTKEY_TEMPLATES = {
     "niri": """# ~/.config/niri/config.kdl
+# niri's own screenshot keys (Ctrl+Shift+1/2/3, then Space) keep working; these extend them.
 binds {
-    Mod+Shift+S { spawn "dustshot" "region"; }
-    Mod+Shift+F { spawn "dustshot" "full"; }
-    Mod+Shift+O { spawn "dustshot" "ocr"; }
-    Mod+Shift+R { spawn "dustshot" "record" "--gif"; }
-    Mod+Shift+V { spawn "dustshot" "pin"; }
+    Mod+Print            { spawn "dustshot" "region" "--backend" "niri"; }
+    Mod+Shift+Print      { spawn "dustshot" "edit" "--clipboard"; }
+    Mod+CTRL+Print       { spawn "dustshot" "ocr" "--clipboard" "--copy"; }
+    Mod+Alt+Print        { spawn "dustshot" "pin" "--clipboard"; }
+    Mod+Shift+CTRL+Print { spawn "dustshot" "record" "--gif"; }
 }""",
     "hyprland": """# ~/.config/hypr/hyprland.conf
 bind = SUPER SHIFT, S, exec, dustshot region
@@ -665,6 +710,23 @@ def command_doctor(args: argparse.Namespace, settings: Settings, store: Settings
             True,
             _("合成器对沙箱客户端隐藏 wlr-screencopy 与 layer-shell；截图默认走 ScreenCast portal"),
         )
+
+    try:
+        from .capture import niri
+
+        picker = niri.ui_available()
+        if picker:
+            detail = _("可以用 niri 自带的截图界面（--backend niri）")
+        elif base.in_flatpak():
+            detail = _("沙箱里连不上 niri 的 IPC")
+        elif not niri.have_niri():
+            detail = _("未安装")
+        else:
+            detail = _("IPC 没有响应（NIRI_SOCKET）")
+        add(_("niri 截图后端（--backend niri）"), picker, detail)
+    except Exception as exc:  # pragma: no cover - depends on host
+        add(_("niri 截图后端（--backend niri）"), False, str(exc))
+
     have_clipboard = shutil.which("wl-copy") is not None and shutil.which("wl-paste") is not None
     add(_("wl-copy/wl-paste（剪贴板）"), have_clipboard, shutil.which("wl-copy") or _("未安装"))
     add("tesseract（OCR）", shutil.which("tesseract") is not None, shutil.which("tesseract") or _("未安装"))
@@ -795,9 +857,14 @@ def build_parser() -> argparse.ArgumentParser:
         sub.add_argument("--rect", metavar="X,Y,W,H", help=_("直接截取指定区域（不弹选区）"))
         sub.add_argument(
             "--backend",
-            choices=["auto", "grim", "portal"],
+            choices=["auto", "grim", "portal", "niri"],
             default="auto",
-            help=_("截图后端：auto 优先 grim，没有 grim 时用 ScreenCast portal"),
+            help=_("截图后端：auto 优先 grim；niri 用 niri 自带的截图界面；portal 走 ScreenCast"),
+        )
+
+    def add_clipboard_option(sub: argparse.ArgumentParser) -> None:
+        sub.add_argument(
+            "--clipboard", action="store_true", help=_("从剪贴板读取图片（例如 niri 刚截好的图）")
         )
 
     region = subparsers.add_parser("region", help=_("框选截图（默认命令）"))
@@ -810,15 +877,18 @@ def build_parser() -> argparse.ArgumentParser:
     add_capture_options(capture)
 
     edit = subparsers.add_parser("edit", help=_("打开编辑器编辑已有图片"))
-    edit.add_argument("file", help=_("图片路径，- 表示从标准输入读取"))
+    edit.add_argument("file", nargs="?", help=_("图片路径，- 表示从标准输入读取；省略时配合 --clipboard"))
+    add_clipboard_option(edit)
 
     pin = subparsers.add_parser("pin", help=_("把图片钉在屏幕上"))
     pin.add_argument("file", nargs="?", help=_("图片路径；省略时先框选截图"))
+    add_clipboard_option(pin)
     pin.add_argument("--position", metavar="X,Y", default="140,140", help=_("初始位置（默认 140,140）"))
     pin.add_argument("--scale", type=float, default=1.0, metavar="N", help=_("初始缩放（默认 1.0）"))
 
     ocr_parser = subparsers.add_parser("ocr", help=_("识别图片或框选区域的文字"))
     ocr_parser.add_argument("file", nargs="?", help=_("图片路径；省略时先框选截图"))
+    add_clipboard_option(ocr_parser)
     ocr_parser.add_argument("--lang", help=_("语言，例如 eng+chi_sim"))
     ocr_parser.add_argument("--psm", type=int, default=6, help=_("tesseract 页面分割模式（默认 6）"))
     ocr_parser.add_argument("--copy", action="store_true", help=_("把识别结果复制到剪贴板"))
@@ -872,6 +942,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     codes = subparsers.add_parser("codes", help=_("识别图片或框选区域的二维码/条码"))
     codes.add_argument("file", nargs="?", help=_("图片路径；省略时先框选截图"))
+    add_clipboard_option(codes)
     codes.add_argument(
         "--command",
         dest="decoder",
@@ -884,6 +955,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     redact_parser = subparsers.add_parser("redact", help=_("找出并遮住图片中的敏感文字"))
     redact_parser.add_argument("file", nargs="?", help=_("图片路径；省略时先框选截图"))
+    add_clipboard_option(redact_parser)
     redact_parser.add_argument("--lang", help=_("OCR 语言，默认取设置"))
     redact_parser.add_argument("--psm", type=int, default=6, help=_("tesseract 页面分割模式（默认 6）"))
     redact_parser.add_argument("--kinds", metavar="LIST", help=_("只查找这些类型，逗号分隔"))

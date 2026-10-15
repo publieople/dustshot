@@ -260,3 +260,130 @@ def test_capture_full_dispatches_to_the_requested_backend(
     assert cli.capture_full("auto") == "grim-image"
     assert cli.capture_full("portal") == "portal-image"
     assert calls == ["grim", "portal"]
+
+
+def test_parser_accepts_niri_and_clipboard() -> None:
+    parser = cli.build_parser()
+    assert parser.parse_args(["region", "--backend", "niri"]).backend == "niri"
+    assert parser.parse_args(["region", "--backend", "niri"]).command == "region"
+    assert parser.parse_args(["edit", "--clipboard"]).clipboard is True
+    assert parser.parse_args(["edit"]).file is None
+    for name in ("pin", "ocr", "codes", "redact"):
+        args = parser.parse_args([name, "--clipboard"])
+        assert args.clipboard is True
+        assert args.file is None
+
+
+def test_capture_backend_hands_region_selection_to_niri(monkeypatch: pytest.MonkeyPatch) -> None:
+    from dustshot.capture import niri
+
+    monkeypatch.setattr(niri, "ui_available", lambda: True)
+    assert cli.capture_backend("niri") == "niri"
+
+
+def test_capture_backend_needs_a_running_niri(monkeypatch: pytest.MonkeyPatch) -> None:
+    from dustshot.capture import niri
+    from dustshot.capture.screencopy import CaptureError
+
+    monkeypatch.setattr(niri, "ui_available", lambda: False)
+    with pytest.raises(CaptureError):
+        cli.capture_backend("niri")
+
+
+def test_rect_cannot_be_combined_with_the_niri_backend(monkeypatch: pytest.MonkeyPatch) -> None:
+    from dustshot.capture import niri
+    from dustshot.capture.base import Geometry
+    from dustshot.capture.screencopy import CaptureError
+
+    monkeypatch.setattr(niri, "ui_available", lambda: True)
+    with pytest.raises(CaptureError):
+        cli.capture_region(Geometry(0, 0, 10, 10), "niri")
+
+
+def test_capture_full_uses_the_niri_screen_action(monkeypatch: pytest.MonkeyPatch) -> None:
+    from dustshot.capture import niri
+
+    monkeypatch.setattr(niri, "ui_available", lambda: True)
+    monkeypatch.setattr(niri, "capture_screen", lambda: "niri-image")
+    assert cli.capture_full("niri") == "niri-image"
+
+
+def test_region_command_takes_the_picture_in_niri(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    from PIL import Image
+
+    from dustshot.capture import niri
+
+    monkeypatch.setattr(cli, "load_store", lambda: _Store(Settings()))
+    monkeypatch.setattr(cli, "History", _History)
+    monkeypatch.setattr(niri, "ui_available", lambda: True)
+    monkeypatch.setattr(niri, "require_niri", lambda: None)
+    monkeypatch.setattr(
+        niri,
+        "request_ui",
+        lambda path, show_pointer=False: Image.new("RGB", (12, 7), "red").save(path),
+    )
+    monkeypatch.setattr(cli, "pick_region", lambda settings: pytest.fail("我们的层壳选区不该被用到"))
+
+    code = cli.main(["region", "--backend", "niri", "--no-copy", "--no-editor", "--dir", str(tmp_path)])
+    assert code == 0
+    saved = sorted(tmp_path.iterdir())
+    assert len(saved) == 1
+    assert Image.open(saved[0]).size == (12, 7)
+
+
+def test_edit_reads_the_clipboard(monkeypatch: pytest.MonkeyPatch) -> None:
+    from PIL import Image
+
+    from dustshot import clipboard as clipboard_module
+
+    image = Image.new("RGB", (3, 2), "blue")
+    opened: dict = {}
+    monkeypatch.setattr(cli, "load_store", lambda: _Store(Settings()))
+    monkeypatch.setattr(clipboard_module, "paste_image", lambda: image)
+    monkeypatch.setattr(
+        cli,
+        "open_editor",
+        lambda picture, settings, source="": opened.update(image=picture, source=source) or 0,
+    )
+    assert cli.main(["edit", "--clipboard"]) == 0
+    assert opened["image"].size == (3, 2)
+    assert opened["source"] == "clipboard"
+
+
+def test_edit_with_an_empty_clipboard_stops(monkeypatch: pytest.MonkeyPatch) -> None:
+    from dustshot import clipboard as clipboard_module
+
+    monkeypatch.setattr(cli, "load_store", lambda: _Store(Settings()))
+    monkeypatch.setattr(clipboard_module, "paste_image", lambda: None)
+    with pytest.raises(SystemExit):
+        cli.main(["edit", "--clipboard"])
+
+
+def test_ocr_reads_the_clipboard(monkeypatch: pytest.MonkeyPatch, capsys) -> None:
+    from PIL import Image
+
+    from dustshot import clipboard as clipboard_module
+    from dustshot import ocr
+
+    monkeypatch.setattr(cli, "load_store", lambda: _Store(Settings()))
+    monkeypatch.setattr(clipboard_module, "paste_image", lambda: Image.new("RGB", (5, 5), "white"))
+    monkeypatch.setattr(
+        ocr,
+        "recognize",
+        lambda image, **kwargs: ocr.OcrResult(text="hi", words=[], languages="eng", confidence=90.0),
+    )
+    assert cli.main(["ocr", "--clipboard"]) == 0
+    assert "hi" in capsys.readouterr().out
+
+
+def test_pin_with_a_cancelled_selection_returns_quietly(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    class Result:
+        confirmed = False
+        region = None
+
+    monkeypatch.setattr(cli, "load_store", lambda: _Store(Settings()))
+    monkeypatch.setattr(cli, "pick_region", lambda settings: Result())
+    assert cli.main(["pin"]) == 0
+    assert "已取消" in capsys.readouterr().out

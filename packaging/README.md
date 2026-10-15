@@ -40,6 +40,9 @@ practice:
   `--backend grim` is still honoured. The manifest grants `xdg-run/pipewire-0`, which the portal
   needs to deliver frames.
 - `dustshot doctor` reports the sandbox in its own row instead of listing grim as available.
+- `--backend niri` (niri's own screenshot picker) is unavailable inside a sandbox: it talks to niri
+  over its IPC socket, which the security context does not hand to a sandboxed client. doctor's niri
+  row says so instead of offering the picker.
 - The tray item cannot own `org.kde.StatusNotifierItem-<pid>-1` (a sandbox only lets a process own
   names inside its own application id), so it falls back to
   `io.github.publieople.Dustshot.StatusNotifierItem-<pid>-1`.
