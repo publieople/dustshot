@@ -42,7 +42,7 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
   hover toolbar stays clickable) and a per-pin opacity slider.
 - planned: grouping pins, keeping the pin above a specific window.
 
-## M4 — OCR and capture extras  (partial)
+## M4 — OCR and capture extras  (done)
 
 - done: tesseract CLI wrapper with TSV word boxes, language discovery, 2x upscale preprocess,
   `eng+chi_sim` default, editor OCR panel and the `catchlight ocr` command (`ocr.py`).
@@ -51,7 +51,9 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
 - done: sensitive text detection (redact.py): email, phone, ID card, bank card and API key
   patterns over OCR word boxes, opaque or mosaic or blur masking, `catchlight redact` command
   and an editor toolbar button.
-- planned: scrolling capture.
+- done: scrolling capture (scroll.py): row-signature overlap detection, seamless vertical
+  stitching, wtype / ydotool auto-advance, a manual mode, and a guard that reports a screen
+  that never moved. Verified on a live niri session against a 2048x6000 page.
 
 ## M5 — Recording, integration, packaging  (partial)
 

@@ -20,6 +20,7 @@ what lets the test suite and CI run headless.
 | `catchlight/barcode.py` | `zbarimg` wrapper: output parsing, file and PIL-image decoding |
 | `catchlight/ocr.py` | tesseract wrapper, TSV parsing, word grouping |
 | `catchlight/redact.py` | sensitive text patterns, OCR word box grouping, masking items |
+| `catchlight/scroll.py` | scrolling capture: row signatures, overlap detection, stitching |
 | `catchlight/record.py` | `wf-recorder` / `gpu-screen-recorder` backends, GIF conversion |
 | `catchlight/ui/layer.py` | gtk4-layer-shell setup plus the `LD_PRELOAD` re-exec dance |
 | `catchlight/ui/selector.py` | the full-screen region overlay |

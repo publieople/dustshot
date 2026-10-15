@@ -143,3 +143,71 @@ def test_redact_command_masks_matches(
     assert cli.main(["redact", "x.png", "--output", str(target)]) == 0
     assert "email" in capsys.readouterr().out
     assert target.exists()
+
+
+def test_parser_accepts_scroll() -> None:
+    parser = cli.build_parser()
+    args = parser.parse_args(["scroll", "--steps", "3", "--manual"])
+    assert args.command == "scroll"
+    assert args.steps == 3
+    assert args.manual is True
+
+
+class _Store:
+    def __init__(self, settings: Settings) -> None:
+        self._settings = settings
+
+    def load(self) -> Settings:
+        return self._settings
+
+    def save(self) -> None:
+        return None
+
+
+class _History:
+    def record_image(self, *args, **kwargs) -> None:
+        return None
+
+    def save(self) -> None:
+        return None
+
+
+def test_scroll_command_stitches_the_frames(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    from PIL import Image, ImageDraw
+
+    from catchlight import scroll
+
+    page = Image.new("RGB", (60, 300), "white")
+    draw = ImageDraw.Draw(page)
+    for y in range(0, 300, 10):
+        colour = ((y * 13) % 256, (y * 29) % 256, (y * 7) % 256)
+        draw.rectangle([2, y, 50, y + 4], fill=colour)
+    frames = iter([page.crop((0, 0, 60, 150)), page.crop((0, 100, 60, 250))])
+
+    monkeypatch.setattr(cli, "load_store", lambda: _Store(Settings()))
+    monkeypatch.setattr(cli, "History", _History)
+    monkeypatch.setattr(cli, "capture_region", lambda region: next(frames))
+    monkeypatch.setattr(scroll, "advance_scroll", lambda *args, **kwargs: None)
+
+    target = tmp_path / "long.png"
+    code = cli.main(
+        [
+            "scroll",
+            "--steps",
+            "2",
+            "--rect",
+            "0,0,60,150",
+            "--no-copy",
+            "--no-editor",
+            "--output",
+            str(target),
+        ]
+    )
+    assert code == 0
+    assert target.exists()
+    assert Image.open(target).size == (60, 250)
+    assert "已保存滚动截图" in capsys.readouterr().out

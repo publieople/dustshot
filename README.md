@@ -54,6 +54,9 @@ then covers each hit with an opaque block (mosaic and blur are available too).*
 - **Sensitive text**: `catchlight redact` runs OCR, finds emails, phone numbers, ID and bank
   card numbers and API keys, then paints opaque blocks over them (solid, mosaic or blur); the
   editor exposes the same pass as a toolbar button.
+- **Scrolling capture**: `catchlight scroll` captures a region again after every page scroll,
+  finds the rows the frames share and stitches them into one long image; scrolling is driven by
+  wtype or ydotool, or by hand with `--manual`.
 - **Recording**: region or whole output to MP4 (H.264) through `wf-recorder`, optional GIF
   conversion through ffmpeg, wall-clock limit, a small stop-recording window.
 - **Extras**: a browsable capture history window (`catchlight history --gui`), `.cln`
@@ -117,6 +120,7 @@ catchlight pin IMAGE           # pin an image on the screen
 catchlight ocr [IMAGE]         # recognise text (captures a region when no file is given)
 catchlight codes [IMAGE]       # decode QR codes and barcodes
 catchlight redact [IMAGE]      # find and cover sensitive text
+catchlight scroll --steps 4    # scroll and stitch a long capture
 catchlight record --duration 15 --gif
 catchlight history --limit 10
 catchlight history --gui       # browse the capture history

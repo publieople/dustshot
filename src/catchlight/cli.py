@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from . import __version__, barcode, clipboard, ocr
+from . import __version__, barcode, clipboard, ocr, scroll
 from .config import Settings, SettingsStore, cache_dir, config_path, data_dir, ensure_dirs
 from .history import History
 
@@ -30,6 +30,7 @@ EPILOG = """常用示例：
     catchlight pin shot.png            把已有图片钉在屏幕上
     catchlight codes                   框选并识别二维码/条码
     catchlight redact                 框选并自动遮住敏感信息
+    catchlight scroll --steps 4         滚动截图并拼接成长图
     catchlight history --gui           浏览截图历史
     catchlight doctor                  检查运行环境
 """
@@ -383,6 +384,73 @@ def command_redact(args: argparse.Namespace, settings: Settings, store: Settings
     return 0
 
 
+def command_scroll(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
+    apply_overrides(settings, args)
+    delay = float(getattr(args, "delay", 0) or 0)
+    if delay > 0:
+        time.sleep(delay)
+
+    explicit = getattr(args, "rect", None)
+    region = parse_rect(explicit) if explicit else pick_region(settings).region
+    if region is None:
+        print("已取消")
+        return 0
+    remember_region(settings, region)
+    with contextlib.suppress(OSError):
+        store.save()
+
+    steps = max(1, int(getattr(args, "steps", 5) or 5))
+    min_overlap = max(1, int(getattr(args, "min_overlap", scroll.MIN_OVERLAP) or scroll.MIN_OVERLAP))
+    settle = max(0.0, float(getattr(args, "settle", 0.0) or 0.0))
+    if getattr(args, "manual", False):
+
+        def advance() -> None:
+            input("滚动到下一屏后按回车继续…")
+
+    else:
+
+        def advance() -> None:
+            scroll.advance_scroll(getattr(args, "advance", None))
+
+    def announce(index: int, image: Any) -> None:
+        print(f"  第 {index}/{steps} 帧：{image.width} x {image.height}", file=sys.stderr)
+
+    try:
+        canvas, overlaps = scroll.scroll_capture(
+            region,
+            steps=steps,
+            capture=capture_region,
+            advance=advance,
+            min_overlap=min_overlap,
+            settle=settle,
+            on_step=announce,
+        )
+    except scroll.ScrollError as error:
+        print(f"滚动截图失败：{error}", file=sys.stderr)
+        return 1
+
+    note = json.dumps(
+        {"region": [region.x, region.y, region.width, region.height], "overlaps": overlaps},
+        ensure_ascii=False,
+    )
+    copy = False if getattr(args, "no_copy", False) else None
+    path = store_image(
+        canvas,
+        settings,
+        kind="scroll",
+        note=note,
+        path=getattr(args, "output", None),
+        copy=copy,
+    )
+    print(f"已保存滚动截图：{path}（{canvas.width} x {canvas.height}，{len(overlaps) + 1} 帧）")
+
+    if getattr(args, "no_editor", False):
+        return 0
+    if getattr(args, "force_editor", False) or settings.capture.open_editor:
+        return open_editor(canvas, settings, source="scroll")
+    return 0
+
+
 def command_record(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
     if args.full:
         return start_recording(args, settings, region=None)
@@ -627,6 +695,7 @@ COMMANDS = {
     "record": command_record,
     "codes": command_codes,
     "redact": command_redact,
+    "scroll": command_scroll,
     "history": command_history,
     "settings": command_settings,
     "hotkeys": command_hotkeys,
@@ -683,6 +752,41 @@ def build_parser() -> argparse.ArgumentParser:
     ocr_parser.add_argument("--psm", type=int, default=6, help="tesseract 页面分割模式（默认 6）")
     ocr_parser.add_argument("--copy", action="store_true", help="把识别结果复制到剪贴板")
     ocr_parser.add_argument("--json", action="store_true", help="输出带词框的 JSON")
+
+    scroll_parser = subparsers.add_parser("scroll", help="滚动截图：连续截图并自动拼接成长图")
+    scroll_parser.add_argument("--steps", type=int, default=5, metavar="N", help="截图帧数（默认 5）")
+    scroll_parser.add_argument(
+        "--advance",
+        choices=["wtype", "ydotool"],
+        help="自动滚动后端（默认自动选择）",
+    )
+    scroll_parser.add_argument("--manual", action="store_true", help="自己滚动，每滚一屏按回车继续")
+    scroll_parser.add_argument(
+        "--min-overlap",
+        type=int,
+        default=scroll.MIN_OVERLAP,
+        metavar="N",
+        help="最小重叠行数（默认 24）",
+    )
+    scroll_parser.add_argument(
+        "--settle",
+        type=float,
+        default=0.35,
+        metavar="SEC",
+        help="每滚一屏后等待画面稳定的秒数（默认 0.35）",
+    )
+    scroll_parser.add_argument("--rect", metavar="X,Y,W,H", help="直接截取指定区域（不弹选区）")
+    scroll_parser.add_argument("--edit", dest="force_editor", action="store_true", help="拼接完打开编辑器")
+    scroll_parser.add_argument("--no-editor", action="store_true", help="拼接完不打开编辑器")
+    scroll_parser.add_argument("--dir", metavar="PATH", help="本次保存目录")
+    scroll_parser.add_argument(
+        "--format",
+        choices=["png", "jpg", "jpeg", "webp"],
+        help="本次保存格式",
+    )
+    scroll_parser.add_argument("--no-copy", action="store_true", help="本次不复制到剪贴板")
+    scroll_parser.add_argument("--delay", type=float, default=0.0, metavar="SEC", help="开始前延时")
+    scroll_parser.add_argument("--output", metavar="PATH", help="输出文件路径")
 
     record = subparsers.add_parser("record", help="录制屏幕（可转 GIF）")
     record.add_argument("--full", action="store_true", help="录制整个桌面，不框选")
