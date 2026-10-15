@@ -3,6 +3,8 @@
 [![CI](https://github.com/publieople/dustshot/actions/workflows/ci.yml/badge.svg)](https://github.com/publieople/dustshot/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
 
+[简体中文](README.zh_CN.md) · English
+
 A Wayland-native screenshot, annotation and pinboard tool, written in Python with GTK 4.
 
 Dustshot shows a frozen frame of your desktop, lets you grab a region with pixel-accurate
@@ -83,6 +85,21 @@ output, starts a recording, or opens the capture history.*
 - **Extras**: a browsable capture history window (`dustshot history --gui`), `.cln`
   editor projects, hotkey templates, `dustshot doctor`.
 
+## Supported desktops
+
+Dustshot is a Wayland-native tool and has **no X11 backend**.
+
+| Desktop / compositor | Capture | Overlay and pins | Notes |
+| --- | --- | --- | --- |
+| niri, Hyprland, Sway, other wlroots-style | `grim` (wlr-screencopy) | wlr-layer-shell: a real full-screen overlay and always-on-top pins | The complete experience; scrolling capture drives the page with wtype / ydotool |
+| GNOME (Mutter), KDE Plasma (KWin) | `--backend portal` (ScreenCast + PipeWire) | No layer-shell, so the overlay and the pins become ordinary windows | The first capture asks for screen-sharing permission in the portal dialog |
+| A Flatpak sandbox | Forced to the portal (the security context hides wlr-screencopy) | Degrades the same way | Build and sandbox differences: [packaging/README.md](packaging/README.md) |
+| An X11 session | Not supported | — | grim and layer-shell are Wayland protocols |
+
+The tray icon needs a StatusNotifierItem host (KDE Plasma, waybar, quickshell / noctalia, ...). OCR,
+barcodes and recording shell out to tesseract, zbarimg and wf-recorder, and do not depend on the
+compositor.
+
 ## Requirements
 
 - Python 3.11 or newer, GTK 4, `gtk4-layer-shell`
@@ -132,8 +149,15 @@ install -Dm644 packaging/io.github.publieople.Dustshot.metainfo.xml ~/.local/sha
 cp -r packaging/icons/hicolor ~/.local/share/icons/
 ```
 
-A Flatpak manifest lives at `packaging/io.github.publieople.Dustshot.yml`; it is a starting point and has
-not been built in CI, because capture and overlay need a live Wayland session.
+A Flatpak manifest lives at `packaging/io.github.publieople.Dustshot.yml`; it has been built and tested
+on a live niri session (the sandbox sends `--backend auto` to the ScreenCast portal), and
+[packaging/README.md](packaging/README.md) documents the build and what the sandbox changes. CI does
+not build it, because capture and overlay need a live Wayland session.
+
+```fish
+flatpak-builder --user --install --force-clean build-dir packaging/io.github.publieople.Dustshot.yml
+flatpak run io.github.publieople.Dustshot full
+```
 
 ## Usage
 
