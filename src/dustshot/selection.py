@@ -11,10 +11,14 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 
 from .capture.base import Geometry
+from .capture.edges import SNAP_TOLERANCE, EdgeMap, snap_move, snap_point
 
 MIN_SIZE = 5
 HANDLE_RADIUS = 10
 HANDLE_NAMES = ("nw", "n", "ne", "e", "se", "s", "sw", "w")
+
+LINE_EPSILON = 1
+"""A side within this many pixels of a detected border counts as snapped onto it."""
 
 
 class SelectionMode(StrEnum):
@@ -36,6 +40,19 @@ class SelectionState:
     anchor: tuple[int, int] | None = None
     cursor: tuple[int, int] | None = None
     active_handle: str = ""
+
+    edges: EdgeMap | None = None
+    """Detected window and control borders of this output, in desktop coordinates."""
+
+    snapping: bool = True
+    """False while Alt is held: the pointer then goes exactly where it is put."""
+
+    snap_sides: tuple[str, ...] = ()
+    """Sides of the current region sitting on a detected border, for the guides."""
+
+    hover_box: Geometry | None = None
+    """The box under the pointer while idle; a click picks it up whole."""
+
     _move_offset: tuple[int, int] = field(default=(0, 0), repr=False)
     _resize_start: Geometry | None = field(default=None, repr=False)
 
@@ -52,15 +69,69 @@ class SelectionState:
             max(0, min(round(ly), self.bounds.height)),
         )
 
+    def _snapped_point(self, x: float, y: float) -> tuple[int, int]:
+        if not self.snapping or self.edges is None:
+            return (round(x), round(y))
+        return snap_point(x, y, self.edges)
+
+    def _sides_on_lines(self, region: Geometry | None) -> tuple[str, ...]:
+        """Which sides of the region sit exactly on a detected border."""
+
+        if region is None or not self.snapping or self.edges is None:
+            return ()
+        on_line: list[str] = []
+        for name, value, columns in (
+            ("left", region.x, True),
+            ("right", region.right, True),
+            ("top", region.y, False),
+            ("bottom", region.bottom, False),
+        ):
+            lines = self.edges.columns if columns else self.edges.rows
+            if any(abs(line.position - value) <= LINE_EPSILON for line in lines):
+                on_line.append(name)
+        return tuple(on_line)
+
+    def _snap_moved(self, region: Geometry) -> Geometry:
+        """Slide a moved region onto the nearest border without resizing it."""
+
+        if not self.snapping or self.edges is None:
+            return region
+        moved, _sides = snap_move(region, self.edges, SNAP_TOLERANCE)
+        return moved
+
+    def _click_box(self, lx: float, ly: float) -> Geometry | None:
+        """The detected box under a bare click, if there is one."""
+
+        if not self.snapping or self.edges is None:
+            return None
+        x, y = self.to_desktop(lx, ly)
+        return self.edges.enclosing_box(x, y)
+
+    def hover(self, lx: float, ly: float) -> Geometry | None:
+        """Track the box under the pointer so the overlay can preview it."""
+
+        inside_region = self.has_region() and self.region_contains_local(lx, ly)
+        if self.mode is not SelectionMode.IDLE or inside_region or not self.snapping or self.edges is None:
+            self.hover_box = None
+            return None
+        x, y = self.to_desktop(lx, ly)
+        self.hover_box = self.edges.enclosing_box(x, y)
+        return self.hover_box
+
+    def region_local_of(self, region: Geometry) -> Geometry:
+        """Convert a desktop rectangle of this output into local coordinates."""
+
+        return Geometry(
+            region.x - self.bounds.x,
+            region.y - self.bounds.y,
+            region.width,
+            region.height,
+        )
+
     def region_local(self) -> Geometry | None:
         if self.region is None:
             return None
-        return Geometry(
-            self.region.x - self.bounds.x,
-            self.region.y - self.bounds.y,
-            self.region.width,
-            self.region.height,
-        )
+        return self.region_local_of(self.region)
 
     def region_contains_local(self, lx: float, ly: float) -> bool:
         return self.region is not None and self.region.contains_point(lx + self.bounds.x, ly + self.bounds.y)
@@ -109,64 +180,79 @@ class SelectionState:
     # -------------------------------------------------------------------- input
     def press(self, lx: float, ly: float) -> SelectionMode:
         lx, ly = self.clamp_local(lx, ly)
-        self.cursor = self.to_desktop(lx, ly)
-        self.anchor = (lx, ly)
-        self.active_handle = ""
+        self.snap_sides = ()
 
         handle = self.hit_handle(lx, ly)
         if handle:
+            self.cursor = self.to_desktop(lx, ly)
+            self.anchor = (lx, ly)
             self.mode = SelectionMode.RESIZE
             self.active_handle = handle
             self._resize_start = self.region
             return self.mode
 
+        x, y = self.to_desktop(lx, ly)
         if self.region_contains_local(lx, ly):
             self.mode = SelectionMode.MOVE
-            cursor_x, cursor_y = self.to_desktop(lx, ly)
-            self._move_offset = (self.region.x - cursor_x, self.region.y - cursor_y)
+            self._move_offset = (self.region.x - x, self.region.y - y)
+            self.anchor = (lx, ly)
+            self.cursor = (x, y)
             return self.mode
 
+        x, y = self._snapped_point(x, y)
+        self.cursor = (x, y)
+        self.anchor = (x - self.bounds.x, y - self.bounds.y)
         self.mode = SelectionMode.NEW
-        start_x, start_y = self.to_desktop(lx, ly)
-        self.region = Geometry(start_x, start_y, 0, 0)
+        self.region = Geometry(x, y, 0, 0)
         return self.mode
 
     def drag(self, lx: float, ly: float) -> SelectionMode:
         lx, ly = self.clamp_local(lx, ly)
-        self.cursor = self.to_desktop(lx, ly)
+        x, y = self.to_desktop(lx, ly)
+        self.cursor = (x, y)
         if self.mode is SelectionMode.NEW and self.anchor is not None:
             ax, ay = self.anchor
-            self.region = Geometry.from_points(*self.to_desktop(ax, ay), *self.to_desktop(lx, ly))
-        elif self.mode is SelectionMode.MOVE and self.region is not None:
-            offset_x, offset_y = self._move_offset
-            cursor_x, cursor_y = self.to_desktop(lx, ly)
+            snapped_x, snapped_y = self._snapped_point(x, y)
             self.region = _clamp_inside(
-                Geometry(cursor_x + offset_x, cursor_y + offset_y, self.region.width, self.region.height),
+                Geometry.from_points(ax + self.bounds.x, ay + self.bounds.y, snapped_x, snapped_y),
                 self.bounds,
             )
+        elif self.mode is SelectionMode.MOVE and self.region is not None:
+            offset_x, offset_y = self._move_offset
+            moved = self._snap_moved(
+                Geometry(x + offset_x, y + offset_y, self.region.width, self.region.height)
+            )
+            self.region = _clamp_inside(moved, self.bounds)
         elif self.mode is SelectionMode.RESIZE and self._resize_start is not None:
             self.region = _resize(
                 self._resize_start,
                 self.active_handle,
-                self.to_desktop(lx, ly),
+                self._snapped_point(x, y),
                 self.bounds,
             )
+        self.snap_sides = self._sides_on_lines(self.region)
         return self.mode
 
     def release(self, lx: float, ly: float) -> Geometry | None:
-        if self.mode is not SelectionMode.IDLE:
-            self.drag(lx, ly)
         mode = self.mode
+        if mode is not SelectionMode.IDLE:
+            self.drag(lx, ly)
         self.mode = SelectionMode.IDLE
         self.active_handle = ""
         self._resize_start = None
+        clicked = mode is SelectionMode.NEW and not self.has_region()
         if self.region is not None and (self.region.width < MIN_SIZE or self.region.height < MIN_SIZE):
-            if mode is SelectionMode.NEW:
+            picked = self._click_box(lx, ly) if clicked else None
+            if picked is not None:
+                # A bare click on a window or control selects the whole box.
+                self.region = _clamp_inside(picked, self.bounds)
+            elif mode is SelectionMode.NEW:
                 self.region = None
             else:
                 self.region = _clamp_inside(self.region, self.bounds)
         elif self.region is not None:
             self.region = _clamp_inside(self.region, self.bounds)
+        self.snap_sides = self._sides_on_lines(self.region)
         return self.region
 
     def cancel(self) -> None:
@@ -176,6 +262,7 @@ class SelectionState:
         self.anchor = None
         self.cursor = None
         self.active_handle = ""
+        self.snap_sides = ()
         self._move_offset = (0, 0)
         self._resize_start = None
 
@@ -186,6 +273,7 @@ class SelectionState:
     def select_all(self) -> Geometry:
         self.region = Geometry(self.bounds.x, self.bounds.y, self.bounds.width, self.bounds.height)
         self.mode = SelectionMode.IDLE
+        self.snap_sides = self._sides_on_lines(self.region)
         return self.region
 
     def nudge(self, dx: int, dy: int) -> None:

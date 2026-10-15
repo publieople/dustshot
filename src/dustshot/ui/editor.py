@@ -8,6 +8,7 @@ from typing import Any
 import gi
 
 gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
 from gi.repository import Gdk, GLib, Gtk
 
 from .. import clipboard, ocr, output, redact
@@ -142,6 +143,11 @@ class EditorWindow(Gtk.ApplicationWindow):
         bar.append(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL))
         bar.append(_header_button(_("清除"), _("删除全部标注"), self.clear_items))
         bar.append(_header_button(_("删除所选"), _("删除选中的图元 (Delete)"), self.canvas.delete_selected))
+
+        bar.append(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL))
+        bar.append(_header_button(_("应用裁剪"), _("把画面裁剪到框选区域 (回车)"), self.apply_crop))
+        bar.append(_header_button(_("左转"), _("逆时针旋转 90 度 (Ctrl+Left)"), lambda: self.rotate(-1)))
+        bar.append(_header_button(_("右转"), _("顺时针旋转 90 度 (Ctrl+Right)"), lambda: self.rotate(1)))
         return bar
 
     def _palette(self, annotation: Any) -> Gtk.Widget:
@@ -218,6 +224,30 @@ class EditorWindow(Gtk.ApplicationWindow):
         self.canvas.selected = None
         self.canvas.changed()
         self._set_status(_("已清除全部标注"))
+
+    def apply_crop(self) -> bool:
+        """Apply the rectangle dragged with the crop tool."""
+        if self.canvas.crop_rect is None:
+            self._set_status(_("还没有框选裁剪区域"))
+            return False
+        if not self.canvas.apply_crop():
+            self._set_status(_("裁剪区域无效，图像没有改变"))
+            return False
+        width, height = self.document.size
+        self._set_status(_("已裁剪为 {width} x {height}").format(width=width, height=height))
+        return True
+
+    def rotate(self, turns: int) -> bool:
+        """Turn the whole picture, annotations included, by quarter turns."""
+        if not self.document.rotate(turns):
+            self._set_status(_("没有可旋转的画面"))
+            return False
+        self.canvas.selected = None
+        self.canvas.cancel_crop()
+        self.canvas.changed()
+        width, height = self.document.size
+        self._set_status(_("已旋转为 {width} x {height}").format(width=width, height=height))
+        return True
 
     def copy(self) -> bool:
         image = self.document.render()
@@ -373,10 +403,18 @@ class EditorWindow(Gtk.ApplicationWindow):
         if ctrl and keyval in (Gdk.KEY_w, Gdk.KEY_W):
             self.close()
             return True
+        if ctrl and keyval in (Gdk.KEY_Left, Gdk.KEY_Right):
+            self.rotate(-1 if keyval == Gdk.KEY_Left else 1)
+            return True
         if keyval in (Gdk.KEY_Delete, Gdk.KEY_BackSpace):
             self.canvas.delete_selected()
             return True
+        if keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
+            self.apply_crop()
+            return True
         if keyval == Gdk.KEY_Escape:
+            if self.canvas.cancel_crop():
+                return True
             self.canvas.deselect()
             return True
         if keyval in (Gdk.KEY_plus, Gdk.KEY_equal):

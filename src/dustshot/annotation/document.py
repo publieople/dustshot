@@ -17,6 +17,7 @@ from typing import Any
 
 from PIL import Image
 
+from ..capture.base import Geometry
 from ..config import AnnotationSettings
 from .items import Item, SerialItem, items_from_jsonable, items_to_jsonable
 from .render import render
@@ -24,6 +25,14 @@ from .render import render
 PROJECT_SUFFIX = ".cln"
 FORMAT_VERSION = 1
 MAX_HISTORY = 200
+
+#: Crop and rotate replace the base image, so those history entries carry it.
+#: A full screen frame is about 12 MiB, hence a much smaller cap than MAX_HISTORY.
+MAX_IMAGE_HISTORY = 12
+
+#: One undo entry: the base image (None when the step did not touch it) and the
+#: annotation list. Images are never mutated in place, so referencing them is safe.
+_Snapshot = tuple[Image.Image | None, list[dict[str, Any]]]
 
 
 class Document:
@@ -40,8 +49,8 @@ class Document:
         self.settings = settings or AnnotationSettings()
         self.items: list[Item] = list(items or [])
         self.source = source
-        self._undo: list[list[dict[str, Any]]] = []
-        self._redo: list[list[dict[str, Any]]] = []
+        self._undo: list[_Snapshot] = []
+        self._redo: list[_Snapshot] = []
         self.serial_counter = max(1, int(self.settings.serial_start))
         self.revision = 0
 
@@ -63,32 +72,72 @@ class Document:
     def contains(self, x: float, y: float) -> bool:
         return 0 <= x < self.size[0] and 0 <= y < self.size[1]
 
-    # ------------------------------------------------------------------- history
-    def _snapshot(self) -> list[dict[str, Any]]:
-        return items_to_jsonable(self.items)
+    def crop(self, box: Geometry) -> bool:
+        """Keep only the given rectangle and move the annotations with it."""
 
-    def push_undo(self) -> None:
-        self._undo.append(self._snapshot())
+        box = box.clamped(self.base.width, self.base.height)
+        if box.is_empty() or box.as_tuple() == (0, 0, self.base.width, self.base.height):
+            return False
+        self.push_undo(self.base)
+        self.base = self.base.crop(box.as_pil_box())
+        for item in self.items:
+            item.move(-box.x, -box.y)
+        self.items = [item for item in self.items if _overlaps(item, self.base.size)]
+        self.touch()
+        return True
+
+    def rotate(self, turns: int = 1) -> bool:
+        """Rotate the picture by whole quarter turns; negative goes anticlockwise."""
+
+        steps = turns % 4
+        if steps == 0:
+            return False
+        self.push_undo(self.base)
+        for _ in range(steps):
+            size = (self.base.width, self.base.height)
+            self.base = self.base.transpose(Image.Transpose.ROTATE_270)
+            for item in self.items:
+                item.rotate_quarter(size, clockwise=True)
+        self.touch()
+        return True
+
+    # ------------------------------------------------------------------- history
+    def _snapshot(self, base: Image.Image | None = None) -> _Snapshot:
+        return (base, items_to_jsonable(self.items))
+
+    def push_undo(self, base: Image.Image | None = None) -> None:
+        self._undo.append(self._snapshot(base))
         if len(self._undo) > MAX_HISTORY:
             self._undo.pop(0)
+        self._trim_image_history()
         self._redo.clear()
         self.touch()
 
-    def undo(self) -> bool:
-        if not self._undo:
+    def _trim_image_history(self) -> None:
+        """Drop the oldest undo entries once too many base images are pinned."""
+
+        images = [index for index, (image, _items) in enumerate(self._undo) if image is not None]
+        if len(images) > MAX_IMAGE_HISTORY:
+            del self._undo[: images[0] + 1]
+
+    def _rewind(self, source: list[_Snapshot], target: list[_Snapshot]) -> bool:
+        if not source:
             return False
-        self._redo.append(self._snapshot())
-        self.items = items_from_jsonable(self._undo.pop())
+        base, items = source.pop()
+        # Going back over a crop or a rotation has to hand the current image on
+        # to the opposite stack, so redoing puts the same picture back.
+        target.append((self.base if base is not None else None, items_to_jsonable(self.items)))
+        if base is not None:
+            self.base = base
+        self.items = items_from_jsonable(items)
         self.touch()
         return True
 
+    def undo(self) -> bool:
+        return self._rewind(self._undo, self._redo)
+
     def redo(self) -> bool:
-        if not self._redo:
-            return False
-        self._undo.append(self._snapshot())
-        self.items = items_from_jsonable(self._redo.pop())
-        self.touch()
-        return True
+        return self._rewind(self._redo, self._undo)
 
     @property
     def can_undo(self) -> bool:
@@ -218,6 +267,13 @@ class Document:
         document = cls.from_dict(meta, image, settings=settings)
         document.source = str(path)
         return document
+
+
+def _overlaps(item: Item, size: tuple[int, int]) -> bool:
+    """True when the item still touches a picture of the given size."""
+
+    box = item.bbox()
+    return box.right > 0 and box.bottom > 0 and box.x < size[0] and box.y < size[1]
 
 
 def _png_bytes(image: Image.Image) -> bytes:

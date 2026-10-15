@@ -23,6 +23,10 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
   select-all, last region restored on the next run.
 - Enter = save + copy, Ctrl+C = copy only, Ctrl+S = save only, Ctrl+R = hand the region to the
   recorder, Esc / right click = cancel.
+- done: snapping to the windows and controls behind the overlay. The borders of the frozen frame are
+  found by projecting edge energy onto both axes (capture/edges.py), so a dragged or nudged side
+  lands on the nearest border within 12 px without asking the compositor for window geometry — which
+  a Flatpak client cannot do. Alt suspends snapping for the current drag.
 
 ## M2 — Annotation editor  (done)
 
@@ -32,6 +36,9 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
   ten-colour palette, CJK-aware font resolution (`annotation/fonts.py`).
 - Save, copy, pin or OCR straight from the editor; projects round-trip through a `.cln` file
   (a zip holding `annotations.json` and `image.png`).
+- done: crop and rotation. The crop tool marks the box to keep (Enter applies it, Esc drops it) and
+  Ctrl+Left / Ctrl+Right rotate the picture in 90° steps; both go through the same snapshot undo
+  stack as the annotations and keep the item coordinates in step (annotation/document.py).
 
 ## M3 — Pinboard  (done)
 
@@ -40,6 +47,9 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
 - done: several pins at once (DustshotApp.spawn_pin), pin-again from the toolbar or the editor,
   edge and centre snapping while dragging (snap.py), a centre button, click-through (only the
   hover toolbar stays clickable) and a per-pin opacity slider.
+- done: a pin can be sent back into the editor: the 编辑 button or Ctrl+E reopens it in the
+  annotation editor, and the rendered picture replaces the pin at the same zoom when the editor
+  closes; a result that arrives after the pin was closed is dropped.
 - done: pin groups (pinboard.py): the link toggle (联动) ties two or more pins together
   so they share every drag and every zoom step, a group that drops below two members is
   dissolved again, and grouped members are clamped to the output they sit on.
@@ -78,7 +88,7 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
   session: a 2560x1600 PNG that matches `grim` on a static desktop (0.6% of pixels differ, mostly
   the clock), with the D-Bus dance covered by cross-process tests under `dbus-run-session`.
 - done: translations (i18n.py): every interface string goes through gettext, `po/dustshot.pot`
-  carries 285 messages, the English catalogue is fully translated and compiled into
+  carries 294 messages, the English catalogue is fully translated and compiled into
   `src/dustshot/locale/en/LC_MESSAGES/dustshot.mo` (shipped as package data), and
   `DUSTSHOT_LANG` / `DUSTSHOT_LOCALEDIR` drive the lookup, with tests for the catalogue
   completeness and the `python3 -m dustshot.i18n compile` tool.

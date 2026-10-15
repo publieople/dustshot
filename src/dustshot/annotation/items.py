@@ -52,6 +52,31 @@ def _alpha(color: str) -> float:
     return 1.0
 
 
+def _rotate_point(x: int, y: int, image: tuple[int, int], clockwise: bool = True) -> tuple[int, int]:
+    """Map one coordinate through a quarter turn of a picture of this size."""
+
+    image_width, image_height = image
+    if clockwise:
+        return (image_height - 1 - y, x)
+    return (y, image_width - 1 - x)
+
+
+def _rotate_box(
+    x: int, y: int, width: int, height: int, image: tuple[int, int], clockwise: bool = True
+) -> tuple[int, int]:
+    """Map the top-left corner of a rectangle through a quarter turn.
+
+    Pixel ranges rotate the other way round than bare coordinates: a rectangle
+    covering rows y .. y + height ends up covering columns
+    image_height - y - height .. image_height - y.
+    """
+
+    image_width, image_height = image
+    if clockwise:
+        return (image_height - y - height, x)
+    return (y, image_width - x - width)
+
+
 @dataclass
 class Style:
     """Visual attributes shared by all annotations."""
@@ -119,6 +144,18 @@ class Item:
     def scaled(self, factor: float) -> None:
         """Scale geometry in place; used when the capture scale changes."""
 
+    def rotate_quarter(self, image: tuple[int, int], clockwise: bool = True) -> None:
+        """Rotate the item a quarter turn inside a picture of this size.
+
+        The size is the one before the rotation. Items keep their own
+        orientation on purpose: a label or a serial badge stays upright and only
+        its anchor follows the pixels around it.
+        """
+
+        box = self.bbox()
+        new_x, new_y = _rotate_box(box.x, box.y, box.width, box.height, image, clockwise)
+        self.move(new_x - box.x, new_y - box.y)
+
 
 @dataclass
 class _BoxItem(Item):
@@ -151,6 +188,10 @@ class _BoxItem(Item):
         self.width = round(self.width * factor)
         self.height = round(self.height * factor)
         self.style.width = max(1, round(self.style.width * factor))
+
+    def rotate_quarter(self, image: tuple[int, int], clockwise: bool = True) -> None:
+        self.x, self.y = _rotate_box(self.x, self.y, self.width, self.height, image, clockwise)
+        self.width, self.height = self.height, self.width
 
 
 @register
@@ -227,6 +268,10 @@ class LineItem(Item):
         self.x2 = round(self.x2 * factor)
         self.y2 = round(self.y2 * factor)
         self.style.width = max(1, round(self.style.width * factor))
+
+    def rotate_quarter(self, image: tuple[int, int], clockwise: bool = True) -> None:
+        self.x1, self.y1 = _rotate_point(self.x1, self.y1, image, clockwise)
+        self.x2, self.y2 = _rotate_point(self.x2, self.y2, image, clockwise)
 
     @classmethod
     def from_payload(cls, payload: dict[str, Any], style: Style, item_id: str) -> LineItem:
@@ -311,6 +356,9 @@ class _StrokeItem(Item):
     def scaled(self, factor: float) -> None:
         self.points = [(round(px * factor), round(py * factor)) for px, py in self.points]
         self.style.width = max(1, round(self.style.width * factor))
+
+    def rotate_quarter(self, image: tuple[int, int], clockwise: bool = True) -> None:
+        self.points = [_rotate_point(px, py, image, clockwise) for px, py in self.points]
 
 
 @register

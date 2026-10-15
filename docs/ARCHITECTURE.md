@@ -9,7 +9,8 @@ what lets the test suite and CI run headless.
 | `dustshot/capture/base.py` | `Geometry`, `OutputInfo`, `Frame`; logical/physical scale maths |
 | `dustshot/capture/screencopy.py` | output discovery (`niri msg`), frames (`grim`), region capture |
 | `dustshot/capture/portal.py` | ScreenCast portal client and PipeWire frame grabbing |
-| `dustshot/selection.py` | the region state machine (new / move / resize, handles, clamping) |
+| `dustshot/capture/edges.py` | window / control border detection for selection snapping |
+| `dustshot/selection.py` | the region state machine (new / move / resize, handles, snapping, clamping) |
 | `dustshot/annotation/items.py` | item model, style, registry, JSON round-trip |
 | `dustshot/annotation/render.py` | the Pillow renderer shared by GUI and tests |
 | `dustshot/annotation/document.py` | one edited image: items, undo stack, hit testing, `.cln` |
@@ -27,9 +28,9 @@ what lets the test suite and CI run headless.
 | `dustshot/record.py` | `wf-recorder` / `gpu-screen-recorder` backends, GIF conversion |
 | `dustshot/ui/layer.py` | gtk4-layer-shell setup plus the `LD_PRELOAD` re-exec dance |
 | `dustshot/ui/selector.py` | the full-screen region overlay |
-| `dustshot/ui/canvas.py` | the annotation canvas (Pillow render + Cairo blit, live preview) |
+| `dustshot/ui/canvas.py` | the annotation canvas (Pillow render + Cairo blit, live preview, crop overlay) |
 | `dustshot/ui/editor.py` | the editor window: toolbar, palette, actions, OCR panel |
-| `dustshot/ui/pin.py` | the floating pinned image (snapping, click-through, opacity, link toggle) |
+| `dustshot/ui/pin.py` | the floating pinned image (snapping, click-through, opacity, link toggle, editor round-trip) |
 | `dustshot/ui/tray.py` | StatusNotifierItem server and dbusmenu |
 | `dustshot/ui/history_window.py` | the browsable capture history window |
 | `dustshot/ui/app.py` | `Gtk.Application` that owns the windows for one CLI invocation |

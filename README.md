@@ -20,13 +20,13 @@ handles, a live size label, a magnifier with colour probe and the shortcut bar.*
 
 ![Annotation editor](docs/images/editor.png)
 
-*Editor: toolbar with eleven tools, colour palette, per-tool widths, snapshot undo/redo, and
-save / copy / pin / OCR in the header bar.*
+*Editor: toolbar with twelve tools, colour palette, per-tool widths, snapshot undo/redo, crop and
+90° rotation, and save / copy / pin / OCR in the header bar.*
 
 ![Pinned image](docs/images/pin.png)
 
 *Pinboard: any capture (or a file) can float above the desktop, draggable and zoomable, with a
-hover toolbar to copy, save, pin again, centre, click through or fade.*
+hover toolbar to copy, save, pin again, edit, centre, click through or fade.*
 
 ![Capture history](docs/images/history.png)
 
@@ -45,14 +45,18 @@ output, starts a recording, or opens the capture history.*
 ## Features
 
 - **Region capture** on a frozen backdrop: per-output full-screen overlay, dimmed outside area,
-  eight resize handles, live size label, magnifier with colour probe, crosshair.
+  eight resize handles, live size label, magnifier with colour probe, crosshair, and snapping to
+  the borders of the windows and controls that are visible in the backdrop (hold Alt for a free
+  selection).
 - **Annotation editor**: rectangle, ellipse, line, arrow, pen, highlighter, text, serial numbers,
-  mosaic and blur; ten-colour palette, per-tool widths, snapshot undo/redo, select and drag any
-  item, save/copy/pin without leaving the window.
+  mosaic and blur; crop to a dragged box (Enter applies it, Esc drops it) and rotate the picture in
+  90° steps with Ctrl+Left / Ctrl+Right; ten-colour palette, per-tool widths, snapshot undo/redo,
+  select and drag any item, save/copy/pin without leaving the window.
 - **Pin**: drop one or more captures onto the screen as always-on-top floating windows; drag to
   move (with edge and centre snapping), scroll to zoom, per-pin opacity, click-through, a
-  centre button and a hover toolbar with copy, save, pin-again and close. The link toggle
-  (联动) ties two or more pins into a group that moves and zooms as one, and a group
+  centre button and a hover toolbar with copy, save, pin-again, edit and close; 编辑 / Ctrl+E
+  reopens the pin in the annotation editor and puts the edited picture back at the same zoom. The
+  link toggle (联动) ties two or more pins into a group that moves and zooms as one, and a group
   dissolves as soon as fewer than two pins are left in it.
 - **OCR**: tesseract behind a wrapper that keeps word boxes and line grouping, with `eng+chi_sim`
   by default and 2x upscaling preprocess.

@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import os
 import tempfile
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import gi
 
 gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
 from gi.repository import Gdk, Gtk
 from PIL import Image
 
@@ -17,6 +18,10 @@ from ..i18n import _
 from ..snap import centre_position, snap_position
 from .layer import init_window, layer_shell
 from .pixbuf import to_pixbuf
+
+if TYPE_CHECKING:  # the editor imports this module, so keep the import lazy
+    from ..annotation.document import Document
+    from .editor import EditorWindow
 
 MIN_SCALE = 0.15
 MAX_SCALE = 4.0
@@ -49,6 +54,8 @@ class PinWindow(Gtk.ApplicationWindow):
         self._drag_bounds: Geometry | None = None
         self.click_through = False
         self._toolbar: Gtk.Widget | None = None
+        self._editor: Any = None
+        self._closed = False
 
         self.set_title("Dustshot pin")
         self.area = Gtk.DrawingArea()
@@ -110,6 +117,7 @@ class PinWindow(Gtk.ApplicationWindow):
         toolbar.set_margin_bottom(8)
         for label, callback, tip in (
             ("1:1", self._reset_zoom, _("恢复原始大小")),
+            (_("编辑"), self._edit, _("在编辑器里继续修改这张贴图 (Ctrl+E)")),
             (_("复制"), self._copy, _("复制到剪贴板")),
             (_("保存"), self._save, _("保存为文件")),
             (_("贴图"), self._pin_again, _("再贴一张")),
@@ -248,6 +256,9 @@ class PinWindow(Gtk.ApplicationWindow):
         if ctrl and keyval in (Gdk.KEY_s, Gdk.KEY_S):
             self._save()
             return True
+        if ctrl and keyval in (Gdk.KEY_e, Gdk.KEY_E):
+            self._edit()
+            return True
         if keyval in (Gdk.KEY_plus, Gdk.KEY_equal):
             self._zoom(1.1)
             return True
@@ -287,6 +298,38 @@ class PinWindow(Gtk.ApplicationWindow):
             self.image.save(path)
             return path
         return str(save_image(self.image, capture))
+
+    def _edit(self) -> EditorWindow | None:
+        """Reopen the editor on this pin so the picture can be changed further."""
+
+        from .editor import EditorWindow
+
+        if self._editor is not None:
+            self._editor.present()
+            return self._editor
+        editor = EditorWindow(self.app, self._pin_document(), self.settings, on_done=self._editor_done)
+        self._editor = editor
+        editor.present()
+        return editor
+
+    def _pin_document(self) -> Document:
+        from ..annotation.document import Document
+
+        return Document(self.image.copy(), getattr(self.settings, "annotation", None), source="pin")
+
+    def _editor_done(self, editor: EditorWindow) -> None:
+        """Take the edited picture back into the pin and drop the editor."""
+
+        self._editor = None
+        if self._closed:
+            return
+        self.set_image(editor.document.render())
+
+    def set_image(self, image: Image.Image) -> None:
+        """Replace the pinned picture, keeping the current zoom level."""
+
+        self.image = image.convert("RGBA") if image.mode == "RGBA" else image.convert("RGB")
+        self._apply_size()
 
     def _pin_again(self) -> None:
         parent = self.app
@@ -346,6 +389,7 @@ class PinWindow(Gtk.ApplicationWindow):
         self.set_opacity(float(scale.get_value()))
 
     def _on_close_request(self, window: Gtk.Window) -> bool:
+        self._closed = True
         if self.app is not None:
             if self.on_close is not None:
                 self.on_close(self)

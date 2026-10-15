@@ -21,6 +21,7 @@ from PIL import Image
 
 from .. import APP_ID
 from ..capture.base import Frame, Geometry, OutputInfo
+from ..capture.edges import detect
 from ..capture.screencopy import CaptureError, capture_output, list_outputs
 from ..i18n import _
 from ..selection import SelectionMode, SelectionState
@@ -52,6 +53,9 @@ class OutputOverlay(Gtk.ApplicationWindow):
         self.frame = frame
         self.output = frame.output
         self.state = SelectionState(bounds=self.output.logical)
+        # Borders come from the frozen frame: the sandbox hides the compositor
+        # window list, but the pixels of every window are already here.
+        self.state.edges = detect(frame)
         self.cursor: tuple[int, int] | None = None
         self.hint_timer = 0
         self.message = ""
@@ -104,21 +108,26 @@ class OutputOverlay(Gtk.ApplicationWindow):
         return area
 
     # --------------------------------------------------------------------- input
-    def _on_motion(self, _controller, x: float, y: float) -> None:
+    def _on_motion(self, controller, x: float, y: float) -> None:
+        self.state.snapping = _snapping_allowed(controller)
         self.cursor = (int(x), int(y))
+        self.state.hover(x, y)
         self.area.queue_draw()
 
     def _on_leave(self, _controller) -> None:
         self.cursor = None
+        self.state.hover_box = None
         self.area.queue_draw()
 
-    def _on_drag_begin(self, _gesture, x: float, y: float) -> None:
+    def _on_drag_begin(self, gesture, x: float, y: float) -> None:
+        self.state.snapping = _snapping_allowed(gesture)
         self.state.press(x, y)
         self.cursor = (int(x), int(y))
         self._notify()
         self.area.queue_draw()
 
     def _on_drag_update(self, gesture, offset_x: float, offset_y: float) -> None:
+        self.state.snapping = _snapping_allowed(gesture)
         point = gesture.get_start_point()
         self.state.drag(point.x + offset_x, point.y + offset_y)
         self._notify()
@@ -226,6 +235,9 @@ class OutputOverlay(Gtk.ApplicationWindow):
         if region is not None and not region.is_empty():
             self._draw_region(cr, region)
             self._draw_size_label(cr, region)
+            self._draw_guides(cr, width, height, region)
+        else:
+            self._draw_preview(cr)
         self._draw_crosshair(cr, width, height)
         self._draw_magnifier(cr, width, height)
         self._draw_hints(cr, width, height)
@@ -296,6 +308,45 @@ class OutputOverlay(Gtk.ApplicationWindow):
         cr.move_to(x + pad, y + pad)
         PangoCairo.show_layout(cr, layout)
 
+    def _draw_preview(self, cr) -> None:
+        """Show the window or control a click would pick up."""
+
+        box = self.state.hover_box
+        if box is None:
+            return
+        local = self.state.region_local_of(box)
+        if local is None or local.is_empty():
+            return
+        cr.set_source_rgba(*ACCENT)
+        cr.set_line_width(1.5)
+        cr.rectangle(local.x + 0.5, local.y + 0.5, local.width - 1, local.height - 1)
+        cr.stroke()
+
+    def _draw_guides(self, cr, width: int, height: int, region: Geometry) -> None:
+        """Extend every snapped side as a line across the output."""
+
+        if not self.state.snap_sides:
+            return
+        sides = {
+            "left": region.x,
+            "right": region.x + region.width,
+            "top": region.y,
+            "bottom": region.y + region.height,
+        }
+        cr.set_source_rgba(1.0, 0.231, 0.188, 0.6)
+        cr.set_line_width(1.0)
+        for side in self.state.snap_sides:
+            value = sides.get(side)
+            if value is None:
+                continue
+            if side in ("left", "right"):
+                cr.move_to(value + 0.5, 0)
+                cr.line_to(value + 0.5, height)
+            else:
+                cr.move_to(0, value + 0.5)
+                cr.line_to(width, value + 0.5)
+        cr.stroke()
+
     def _draw_crosshair(self, cr, width: int, height: int) -> None:
         if self.cursor is None:
             return
@@ -355,7 +406,8 @@ class OutputOverlay(Gtk.ApplicationWindow):
 
     def _draw_hints(self, cr, width: int, height: int) -> None:
         hints = _(
-            "拖动选择区域    回车 保存并复制    Ctrl+C 复制    空格/Ctrl+A 全选    Ctrl+R 录制    Esc 取消"
+            "拖动选择区域    回车 保存并复制    Ctrl+C 复制    空格/Ctrl+A 全选"
+            "    Ctrl+R 录制    Alt 关闭吸附    Esc 取消"
         )
         layout = _make_layout(cr, hints, 12)
         _ink, logical = layout.get_pixel_extents()
@@ -394,6 +446,16 @@ class OutputOverlay(Gtk.ApplicationWindow):
         cr.arc(x + radius, y + height - radius, radius, math.pi / 2, math.pi)
         cr.arc(x + radius, y + radius, radius, math.pi, 1.5 * math.pi)
         cr.close_path()
+
+
+def _snapping_allowed(controller) -> bool:
+    """Alt temporarily releases the selection from the detected borders."""
+
+    try:
+        modifiers = controller.get_current_event_state()
+    except Exception:  # no current event: keep snapping on
+        return True
+    return not (modifiers & Gdk.ModifierType.ALT_MASK)
 
 
 def _make_layout(cr, text: str, size: int, bold: bool = False) -> Pango.Layout:

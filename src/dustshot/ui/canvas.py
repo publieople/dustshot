@@ -9,6 +9,7 @@ from typing import Any
 import gi
 
 gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
 from gi.repository import Gdk, GdkPixbuf, Gtk
 from PIL import Image
 
@@ -46,6 +47,7 @@ TOOLS: tuple[tuple[str, str], ...] = (
     ("serial", _("序号")),
     ("mosaic", _("马赛克")),
     ("blur", _("模糊")),
+    ("crop", _("裁剪")),
 )
 
 BOX_TOOLS = ("rect", "ellipse", "mosaic", "blur")
@@ -66,6 +68,7 @@ TOOL_HINTS = {
     "serial": _("单击添加递增序号"),
     "mosaic": _("拖动框选马赛克区域"),
     "blur": _("拖动框选模糊区域"),
+    "crop": _("拖动框选要保留的区域，回车应用"),
 }
 
 
@@ -109,6 +112,7 @@ class Canvas(Gtk.DrawingArea):
         self.scale = 1.0
         self.offset = (0.0, 0.0)
         self.selected: Item | None = None
+        self.crop_rect: Geometry | None = None
         self._drag_mode = ""
         self._drag_handle = ""
         self._drag_origin = (0.0, 0.0)
@@ -171,6 +175,8 @@ class Canvas(Gtk.DrawingArea):
 
     def set_tool(self, tool: str) -> None:
         self.tool = tool
+        if tool != "crop":
+            self.crop_rect = None
         if tool != "select":
             self.deselect()
         self._emit_status()
@@ -316,6 +322,11 @@ class Canvas(Gtk.DrawingArea):
             self.clamp_preview()
             self.refresh()
             return
+        if self.tool == "crop":
+            self.crop_rect = None
+            self._drag_mode = "crop"
+            self.refresh()
+            return
         if self.tool == "select":
             self._begin_select_drag(ix, iy)
             return
@@ -327,6 +338,13 @@ class Canvas(Gtk.DrawingArea):
         cx, cy = gesture.get_offset()
         ix0, iy0 = self.to_image(sx, sy)
         ix1, iy1 = self.to_image(sx + cx, sy + cy)
+        if self._drag_mode == "crop":
+            iw, ih = self.image_size
+            left, right = sorted((_clamp(ix0, 0.0, float(iw)), _clamp(ix1, 0.0, float(iw))))
+            top, bottom = sorted((_clamp(iy0, 0.0, float(ih)), _clamp(iy1, 0.0, float(ih))))
+            self.crop_rect = Geometry(round(left), round(top), round(right - left), round(bottom - top))
+            self.refresh()
+            return
         if self._drag_mode == "create" and self._preview is not None:
             self._update_drag_geometry(self._preview, ix0, iy0, ix1, iy1)
             self.clamp_preview()
@@ -337,6 +355,14 @@ class Canvas(Gtk.DrawingArea):
             return
 
     def _on_drag_end(self, gesture: Gtk.GestureDrag, dx: float, dy: float) -> None:
+        if self._drag_mode == "crop":
+            self._drag_mode = ""
+            rect = self.crop_rect
+            if rect is not None and (rect.width < MIN_DRAG or rect.height < MIN_DRAG):
+                self.crop_rect = None
+            self.refresh()
+            self._emit_status()
+            return
         if self._drag_mode == "create" and self._preview is not None:
             item = self._preview
             self._preview = None
@@ -357,6 +383,28 @@ class Canvas(Gtk.DrawingArea):
             self.changed()
             return
         self._drag_mode = ""
+
+    # ----------------------------------------------------------------- cropping
+    def apply_crop(self) -> bool:
+        """Trim the document to the dragged rectangle, if there is one."""
+        rect = self.crop_rect
+        self.crop_rect = None
+        ok = rect is not None and self.doc.crop(rect)
+        if ok:
+            self.selected = None
+            self._preview = None
+            self.changed()
+        else:
+            self.refresh()
+        self._emit_status()
+        return ok
+
+    def cancel_crop(self) -> bool:
+        if self.crop_rect is None:
+            return False
+        self.crop_rect = None
+        self.refresh()
+        return True
 
     def _item_visible(self, item: Item) -> bool:
         if isinstance(item, (PencilItem, HighlighterItem)):
@@ -620,6 +668,32 @@ class Canvas(Gtk.DrawingArea):
 
         if self.selected is not None:
             self._draw_selection(cr, self.selected)
+        if self.crop_rect is not None:
+            self._draw_crop(cr)
+
+    def _draw_crop(self, cr: Any) -> None:
+        rect = self.crop_rect
+        if rect is None or rect.is_empty():
+            return
+        left, top = self.to_widget(rect.x, rect.y)
+        right, bottom = self.to_widget(rect.right, rect.bottom)
+        ox, oy = self.offset
+        ir, ib = self.to_widget(*self.image_size)
+        cr.save()
+        cr.set_source_rgba(0.0, 0.0, 0.0, 0.45)
+        for band in (
+            (ox, oy, ir - ox, top - oy),
+            (ox, bottom, ir - ox, ib - bottom),
+            (ox, top, left - ox, bottom - top),
+            (right, top, ir - right, bottom - top),
+        ):
+            cr.rectangle(*band)
+        cr.fill()
+        cr.set_source_rgba(*ACCENT, 1.0)
+        cr.set_line_width(1.5)
+        cr.rectangle(left, top, right - left, bottom - top)
+        cr.stroke()
+        cr.restore()
 
     def _draw_selection(self, cr: Any, item: Item) -> None:
         for _name, (hx, hy) in self._handle_points(item).items():
