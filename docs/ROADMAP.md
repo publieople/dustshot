@@ -57,8 +57,11 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
   templates for niri / Hyprland / Sway / GNOME / KDE, CI and release workflows.
 - done: a browsable capture history window (catchlight history --gui) with thumbnails and
   edit / copy / pin / open-folder / delete actions per entry.
+- done: desktop integration assets in `packaging/` — a desktop entry with region / full /
+  record / OCR / history actions, AppStream metadata (validated with appstreamcli) and icons,
+  plus a starting Flatpak manifest that CI cannot build because capture needs a live session.
 - planned: tray icon, a ScreenCast-portal backend for compositors without wlr-screencopy,
-  Flatpak packaging, translations.
+  a tested Flatpak build, translations.
 
 ## Deliberately out of scope
 

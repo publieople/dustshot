@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.catchlight</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <name>Catchlight</name>
+  <summary>Wayland screenshot, annotation, OCR and pinboard tool</summary>
+
+  <description>
+    <p>
+      Catchlight captures the screen on Wayland compositors that speak wlr-screencopy, annotates
+      the result, decodes text, QR codes and barcodes, and keeps shots on screen as floating pins.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Region capture on a frozen backdrop, with a magnifier, size label and handle resizing</li>
+      <li>An editor with rectangles, ellipses, lines, arrows, pen, highlighter, text, serial
+        numbers, mosaic and blur</li>
+      <li>A pinboard: several always-on-top snippets, draggable, zoomable, snappable,
+        click-through and adjustable in opacity</li>
+      <li>Text recognition through tesseract, QR and barcode decoding through zbar</li>
+      <li>Region or whole-output recording with wf-recorder, optionally converted to GIF</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">io.github.catchlight.desktop</launchable>
+  <url type="homepage">https://github.com/publieople/catchlight</url>
+  <url type="bugtracker">https://github.com/publieople/catchlight/issues</url>
+  <developer id="io.github.publieople">
+    <name>publieople</name>
+  </developer>
+
+  <content_rating type="oars-1.1" />
+  <screenshots>
+    <screenshot type="default">
+      <caption>Region capture overlay</caption>
+      <image>https://raw.githubusercontent.com/publieople/catchlight/main/docs/images/selector.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Annotation editor</caption>
+      <image>https://raw.githubusercontent.com/publieople/catchlight/main/docs/images/editor.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Capture history</caption>
+      <image>https://raw.githubusercontent.com/publieople/catchlight/main/docs/images/history.png</image>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="0.1.0" date="2026-10-15">
+      <description>
+        <p>First release: region capture, annotation editor, pinboard, OCR, barcode decoding,
+          capture history and screen recording.</p>
+      </description>
+    </release>
+  </releases>
+</component>

@@ -84,6 +84,20 @@ pipx install 'catchlight[gtk] @ git+https://github.com/publieople/catchlight'
 `PyGObject` and `pycairo` are the only Python dependencies of the GUI extra; the editor, the
 renderer, the settings store and the CLI all work without them (that is what CI tests).
 
+### Desktop integration
+
+`packaging/` ships a desktop entry with region / full / record / OCR / history actions, AppStream
+metadata and icons, so the tool shows up in application menus:
+
+```fish
+install -Dm644 packaging/io.github.catchlight.desktop ~/.local/share/applications/io.github.catchlight.desktop
+install -Dm644 packaging/io.github.catchlight.metainfo.xml ~/.local/share/metainfo/io.github.catchlight.metainfo.xml
+cp -r packaging/icons/hicolor ~/.local/share/icons/
+```
+
+A Flatpak manifest lives at `packaging/io.github.catchlight.yml`; it is a starting point and has
+not been built in CI, because capture and overlay need a live Wayland session.
+
 ## Usage
 
 ```text
@@ -93,10 +107,10 @@ catchlight capture --no-editor # capture and just save/copy
 catchlight edit IMAGE          # open the editor on an existing file
 catchlight pin IMAGE           # pin an image on the screen
 catchlight ocr [IMAGE]         # recognise text (captures a region when no file is given)
-catchlight codes [IMAGE]        # decode QR codes and barcodes
+catchlight codes [IMAGE]       # decode QR codes and barcodes
 catchlight record --duration 15 --gif
 catchlight history --limit 10
-catchlight history --gui        # browse the capture history
+catchlight history --gui       # browse the capture history
 catchlight settings --show
 catchlight settings --set capture.image_format=jpg
 catchlight hotkeys --compositor niri

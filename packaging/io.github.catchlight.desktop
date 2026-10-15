@@ -1,0 +1,40 @@
+[Desktop Entry]
+Type=Application
+Name=Catchlight
+Name[zh_CN]=Catchlight 截图
+Comment=Wayland screenshot, annotation, OCR and pinboard tool
+Comment[zh_CN]=Wayland 截图、标注、文字识别与贴图工具
+Exec=catchlight region
+Icon=io.github.catchlight
+Terminal=false
+Categories=Graphics;
+Keywords=screenshot;capture;annotate;ocr;pin;wayland;
+Keywords[zh_CN]=截图;标注;文字识别;贴图;
+StartupNotify=true
+StartupWMClass=io.github.catchlight.gui
+Actions=full;edit;record;ocr;history;
+
+[Desktop Action full]
+Name=Capture every output
+Name[zh_CN]=截取全部输出
+Exec=catchlight full --no-editor
+
+[Desktop Action edit]
+Name=Open the editor on a file
+Name[zh_CN]=编辑已有图片
+Exec=catchlight edit %f
+
+[Desktop Action record]
+Name=Record a region
+Name[zh_CN]=录制屏幕区域
+Exec=catchlight record
+
+[Desktop Action ocr]
+Name=Recognise text in a region
+Name[zh_CN]=识别区域文字
+Exec=catchlight ocr --copy
+
+[Desktop Action history]
+Name=Browse capture history
+Name[zh_CN]=浏览截图历史
+Exec=catchlight history --gui

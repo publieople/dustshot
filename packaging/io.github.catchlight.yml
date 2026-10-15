@@ -1,0 +1,43 @@
+# Flatpak manifest for Catchlight.
+#
+# Provided as a starting point: it has NOT been built or tested in this repository's CI,
+# because the capture and overlay code paths need a live Wayland session.
+app-id: io.github.catchlight
+runtime: org.gnome.Platform
+runtime-version: '47'
+sdk: org.gnome.Sdk
+command: catchlight
+
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --filesystem=xdg-pictures
+  - --filesystem=xdg-config/catchlight:create
+  - --filesystem=xdg-data/catchlight:create
+  - --talk-name=org.freedesktop.portal.Desktop
+
+modules:
+  - name: gtk4-layer-shell
+    buildsystem: meson
+    config-opts:
+      - -Dexamples=false
+      - -Dtests=false
+      - -Ddocs=false
+    sources:
+      - type: git
+        url: https://github.com/wmww/gtk4-layer-shell.git
+        tag: v1.3.0
+
+  - name: catchlight
+    buildsystem: simple
+    build-commands:
+      - pip3 install --verbose --no-build-isolation --prefix=${FLATPAK_DEST} Pillow
+      - pip3 install --verbose --no-build-isolation --prefix=${FLATPAK_DEST} .
+      - install -Dm644 packaging/io.github.catchlight.desktop ${FLATPAK_DEST}/share/applications/io.github.catchlight.desktop
+      - install -Dm644 packaging/io.github.catchlight.metainfo.xml ${FLATPAK_DEST}/share/metainfo/io.github.catchlight.metainfo.xml
+      - install -Dm644 packaging/icons/hicolor/256x256/apps/io.github.catchlight.png ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/io.github.catchlight.png
+    sources:
+      - type: dir
+      path: ..
