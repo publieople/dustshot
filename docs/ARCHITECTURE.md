@@ -16,13 +16,16 @@ what lets the test suite and CI run headless.
 | `catchlight/output.py` | naming, unique paths, format handling, save directory resolution |
 | `catchlight/clipboard.py` | `Gdk.Clipboard` when GTK is up, `wl-copy` / `wl-paste` otherwise |
 | `catchlight/history.py` | the JSON capture index |
+| `catchlight/snap.py` | pure geometry helpers for edge and centre snapping |
+| `catchlight/barcode.py` | `zbarimg` wrapper: output parsing, file and PIL-image decoding |
 | `catchlight/ocr.py` | tesseract wrapper, TSV parsing, word grouping |
 | `catchlight/record.py` | `wf-recorder` / `gpu-screen-recorder` backends, GIF conversion |
 | `catchlight/ui/layer.py` | gtk4-layer-shell setup plus the `LD_PRELOAD` re-exec dance |
 | `catchlight/ui/selector.py` | the full-screen region overlay |
 | `catchlight/ui/canvas.py` | the annotation canvas (Pillow render + Cairo blit, live preview) |
 | `catchlight/ui/editor.py` | the editor window: toolbar, palette, actions, OCR panel |
-| `catchlight/ui/pin.py` | the floating pinned image |
+| `catchlight/ui/pin.py` | the floating pinned image (snapping, click-through, opacity) |
+| `catchlight/ui/history_window.py` | the browsable capture history window |
 | `catchlight/ui/app.py` | `Gtk.Application` that owns the windows for one CLI invocation |
 | `catchlight/cli.py` | argparse front end for every command |
 

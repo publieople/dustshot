@@ -12,7 +12,9 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, Gtk
 from PIL import Image
 
-from .layer import init_window
+from ..capture.base import Geometry
+from ..snap import centre_position, snap_position
+from .layer import init_window, layer_shell
 from .pixbuf import to_pixbuf
 
 MIN_SCALE = 0.15
@@ -40,6 +42,8 @@ class PinWindow(Gtk.ApplicationWindow):
         self.position = (int(position[0]), int(position[1]))
         self.on_close = on_close
         self._drag_start: tuple[int, int] | None = None
+        self._drag_bounds: Geometry | None = None
+        self.click_through = False
         self._toolbar: Gtk.Widget | None = None
 
         self.set_title("Catchlight pin")
@@ -55,6 +59,7 @@ class PinWindow(Gtk.ApplicationWindow):
             keyboard="none",
             namespace="catchlight-pin",
         )
+        self._shell = layer_shell()
         self._apply_size()
 
         drag = Gtk.GestureDrag()
@@ -89,8 +94,13 @@ class PinWindow(Gtk.ApplicationWindow):
     def _build(self) -> Gtk.Widget:
         overlay = Gtk.Overlay()
         overlay.set_child(self.area)
-        toolbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-        toolbar.add_css_class("toolbar")
+        # A FlowBox keeps the controls usable on small pins: the surface is only
+        # as wide as the image, so a single long row would be clipped.
+        toolbar = Gtk.FlowBox()
+        toolbar.set_selection_mode(Gtk.SelectionMode.NONE)
+        toolbar.set_max_children_per_line(3)
+        toolbar.set_column_spacing(4)
+        toolbar.set_row_spacing(4)
         toolbar.set_halign(Gtk.Align.CENTER)
         toolbar.set_valign(Gtk.Align.END)
         toolbar.set_margin_bottom(8)
@@ -105,6 +115,24 @@ class PinWindow(Gtk.ApplicationWindow):
             button.connect("clicked", lambda _b, cb=callback: cb())
             button.set_tooltip_text(tip)
             toolbar.append(button)
+
+        centre = Gtk.Button(label="居中")
+        centre.set_tooltip_text("把贴图移到屏幕中央")
+        centre.connect("clicked", lambda _b: self._centre())
+        toolbar.append(centre)
+
+        self.click_button = Gtk.ToggleButton(label="穿透")
+        self.click_button.set_tooltip_text("只让下方工具条响应鼠标，图片区域点击穿透")
+        self.click_button.connect("toggled", self._on_click_through_toggled)
+        toolbar.append(self.click_button)
+
+        self.opacity_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0.2, 1.0, 0.05)
+        self.opacity_scale.set_value(1.0)
+        self.opacity_scale.set_size_request(104, -1)
+        self.opacity_scale.set_tooltip_text("不透明度")
+        self.opacity_scale.connect("value-changed", self._on_opacity_changed)
+        toolbar.append(self.opacity_scale)
+
         self._toolbar = toolbar
         overlay.add_overlay(toolbar)
         return overlay
@@ -114,11 +142,18 @@ class PinWindow(Gtk.ApplicationWindow):
         height = max(1, round(self.image.height * self.scale))
         self.area.set_size_request(width, height)
         self.area.queue_draw()
+        if self.click_through:
+            self._apply_input_region()
 
     def _move_to(self, x: int, y: int) -> None:
-        self.position = (int(x), int(y))
-        self.set_margin_top(max(0, int(y)))
-        self.set_margin_left(max(0, int(x)))
+        """Move the layer surface by rewriting its layer-shell margins."""
+
+        self.position = (max(0, int(x)), max(0, int(y)))
+        shell = self._shell
+        if shell is None:
+            return
+        shell.set_margin(self, shell.Edge.TOP, self.position[1])
+        shell.set_margin(self, shell.Edge.LEFT, self.position[0])
 
     def _show_toolbar(self, visible: bool) -> None:
         if self._toolbar is not None:
@@ -152,11 +187,19 @@ class PinWindow(Gtk.ApplicationWindow):
     # ------------------------------------------------------------------ events
     def _on_drag_begin(self, gesture: Gtk.GestureDrag, sx: float, sy: float) -> None:
         self._drag_start = self.position
+        self._drag_bounds = self._monitor_bounds()
 
     def _on_drag_update(self, gesture: Gtk.GestureDrag, dx: float, dy: float) -> None:
         if self._drag_start is None:
             return
-        self._move_to(int(self._drag_start[0] + dx), int(self._drag_start[1] + dy))
+        x = int(self._drag_start[0] + dx)
+        y = int(self._drag_start[1] + dy)
+        bounds = self._drag_bounds
+        if bounds is not None:
+            width = max(1, round(self.image.width * self.scale))
+            height = max(1, round(self.image.height * self.scale))
+            x, y = snap_position(x, y, width, height, bounds)
+        self._move_to(x, y)
 
     def _on_scroll(self, controller: Gtk.EventControllerScroll, dx: float, dy: float) -> bool:
         if dy == 0:
@@ -218,19 +261,64 @@ class PinWindow(Gtk.ApplicationWindow):
 
     def _pin_again(self) -> None:
         parent = self.app
-        PinWindow(
-            parent,
-            self.image.copy(),
-            self.settings,
-            position=(self.position[0] + 28, self.position[1] + 28),
-            scale=self.scale,
-        )
+        spot = (self.position[0] + 28, self.position[1] + 28)
+        spawner = getattr(parent, "spawn_pin", None)
+        if spawner is not None:
+            spawner(self.image.copy(), position=spot, scale=self.scale)
+            return
+        PinWindow(parent, self.image.copy(), self.settings, position=spot, scale=self.scale)
+
+    # -------------------------------------------------------------- toolbars
+    def _monitor_bounds(self) -> Geometry:
+        display = self.get_display()
+        monitor = None
+        surface = self.get_surface()
+        if surface is not None:
+            monitor = display.get_monitor_at_surface(surface)
+        if monitor is None:
+            monitor = display.get_primary_monitor()
+        if monitor is None:
+            return Geometry(0, 0, 1920, 1080)
+        geometry = monitor.get_geometry()
+        return Geometry(geometry.x, geometry.y, geometry.width, geometry.height)
+
+    def _centre(self) -> None:
+        width = max(1, round(self.image.width * self.scale))
+        height = max(1, round(self.image.height * self.scale))
+        x, y = centre_position(width, height, self._monitor_bounds())
+        self._move_to(x, y)
+
+    def _on_click_through_toggled(self, button: Gtk.ToggleButton) -> None:
+        self.click_through = bool(button.get_active())
+        self._apply_input_region()
+
+    def _apply_input_region(self) -> None:
+        surface = self.get_surface()
+        if surface is None:
+            return
+        if not self.click_through:
+            surface.set_input_region(None)
+            return
+        import cairo
+
+        width = max(1, round(self.image.width * self.scale))
+        height = max(1, round(self.image.height * self.scale))
+        strip = min(max(56, height // 4), height)
+        region = cairo.Region([cairo.RectangleInt(0, max(0, height - strip), width, strip)])
+        surface.set_input_region(region)
+
+    def _on_opacity_changed(self, scale: Gtk.Scale) -> None:
+        self.set_opacity(float(scale.get_value()))
 
     def _on_close_request(self, window: Gtk.Window) -> bool:
         if self.app is not None:
+            if self.on_close is not None:
+                self.on_close(self)
+            else:
+                forget = getattr(self.app, "forget_pin", None)
+                if forget is not None:
+                    forget(self)
             self.app.release()
-        if self.on_close is not None:
-            self.on_close(self)
         return False
 
 

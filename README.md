@@ -26,7 +26,11 @@ save / copy / pin / OCR in the header bar.*
 ![Pinned image](docs/images/pin.png)
 
 *Pinboard: any capture (or a file) can float above the desktop, draggable and zoomable, with a
-hover toolbar to copy, save or close it.*
+hover toolbar to copy, save, pin again, centre, click through or fade.*
+
+![Capture history](docs/images/history.png)
+
+*The browsable capture history (`catchlight history --gui`).*
 
 ## Features
 
@@ -35,13 +39,17 @@ hover toolbar to copy, save or close it.*
 - **Annotation editor**: rectangle, ellipse, line, arrow, pen, highlighter, text, serial numbers,
   mosaic and blur; ten-colour palette, per-tool widths, snapshot undo/redo, select and drag any
   item, save/copy/pin without leaving the window.
-- **Pin**: drop a capture onto the screen as an always-on-top floating window; drag to move,
-  scroll to zoom, hover toolbar to copy, save or close.
+- **Pin**: drop one or more captures onto the screen as always-on-top floating windows; drag to
+  move (with edge and centre snapping), scroll to zoom, per-pin opacity, click-through, a
+  centre button and a hover toolbar with copy, save, pin-again and close.
 - **OCR**: tesseract behind a wrapper that keeps word boxes and line grouping, with `eng+chi_sim`
   by default and 2x upscaling preprocess.
+- **QR and barcodes**: `catchlight codes` decodes QR codes and 1D barcodes with `zbarimg`,
+  either from a file or from a fresh region capture, as text or JSON.
 - **Recording**: region or whole output to MP4 (H.264) through `wf-recorder`, optional GIF
   conversion through ffmpeg, wall-clock limit, a small stop-recording window.
-- **Extras**: capture history, `.cln` editor projects, hotkey templates, `catchlight doctor`.
+- **Extras**: a browsable capture history window (`catchlight history --gui`), `.cln`
+  editor projects, hotkey templates, `catchlight doctor`.
 
 ## Requirements
 
@@ -85,8 +93,10 @@ catchlight capture --no-editor # capture and just save/copy
 catchlight edit IMAGE          # open the editor on an existing file
 catchlight pin IMAGE           # pin an image on the screen
 catchlight ocr [IMAGE]         # recognise text (captures a region when no file is given)
+catchlight codes [IMAGE]        # decode QR codes and barcodes
 catchlight record --duration 15 --gif
 catchlight history --limit 10
+catchlight history --gui        # browse the capture history
 catchlight settings --show
 catchlight settings --set capture.image_format=jpg
 catchlight hotkeys --compositor niri
@@ -127,7 +137,8 @@ Editor:
 | 1 - 9 | pick a palette colour |
 
 Pin window: `+` / `-` / `1` for zoom, Ctrl+C to copy, Ctrl+S to save, Esc or right click to
-close.
+close. The hover toolbar adds `1:1` (reset zoom), copy, save, pin-again, centre, a
+click-through toggle and an opacity slider.
 
 ## Compositor setup
 

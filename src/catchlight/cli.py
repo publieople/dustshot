@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from . import __version__, clipboard, ocr
+from . import __version__, barcode, clipboard, ocr
 from .config import Settings, SettingsStore, cache_dir, config_path, data_dir, ensure_dirs
 from .history import History
 
@@ -28,6 +28,8 @@ EPILOG = """常用示例：
     catchlight ocr                     框选后识别文字
     catchlight record --gif            框选后录制并转 GIF
     catchlight pin shot.png            把已有图片钉在屏幕上
+    catchlight codes                   框选并识别二维码/条码
+    catchlight history --gui           浏览截图历史
     catchlight doctor                  检查运行环境
 """
 
@@ -285,6 +287,35 @@ def command_ocr(args: argparse.Namespace, settings: Settings, store: SettingsSto
     return 0
 
 
+def command_codes(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
+    if args.file:
+        image = load_image(args.file)
+    else:
+        result = pick_region(settings)
+        if not result.confirmed:
+            print("已取消")
+            return 0
+        image = capture_region(result.region) if result.region is not None else capture_full()
+
+    try:
+        codes = barcode.decode(image, command=args.decoder)
+    except barcode.BarcodeError as exc:
+        print(f"条码识别失败：{exc}", file=sys.stderr)
+        return 2
+
+    if args.json:
+        print(json.dumps([code.to_dict() for code in codes], ensure_ascii=False, indent=2))
+    elif not codes:
+        print("没有找到条码或二维码", file=sys.stderr)
+    else:
+        for code in codes:
+            label = code.kind or "barcode"
+            print(f"{label}	{code.text}")
+    if args.copy and codes:
+        clipboard.copy_text("\n".join(code.text for code in codes))
+    return 0
+
+
 def command_record(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
     if args.full:
         return start_recording(args, settings, region=None)
@@ -296,6 +327,11 @@ def command_record(args: argparse.Namespace, settings: Settings, store: Settings
 
 
 def command_history(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
+    if getattr(args, "gui", False):
+        require_gui()
+        from .ui.app import run_gui
+
+        return run_gui(settings, "history", options={"limit": args.limit})
     history = History()
     if args.clear:
         history.entries = []
@@ -522,6 +558,7 @@ COMMANDS = {
     "pin": command_pin,
     "ocr": command_ocr,
     "record": command_record,
+    "codes": command_codes,
     "history": command_history,
     "settings": command_settings,
     "hotkeys": command_hotkeys,
@@ -590,10 +627,23 @@ def build_parser() -> argparse.ArgumentParser:
     record.add_argument("--backend", choices=["wf-recorder", "gpu-screen-recorder"], help="指定录制后端")
     record.add_argument("--output", metavar="PATH", help="输出文件路径")
 
+    codes = subparsers.add_parser("codes", help="识别图片或框选区域的二维码/条码")
+    codes.add_argument("file", nargs="?", help="图片路径；省略时先框选截图")
+    codes.add_argument(
+        "--command",
+        dest="decoder",
+        default=barcode.DEFAULT_COMMAND,
+        metavar="CMD",
+        help="解码命令（默认 zbarimg）",
+    )
+    codes.add_argument("--copy", action="store_true", help="把识别结果复制到剪贴板")
+    codes.add_argument("--json", action="store_true", help="以 JSON 输出")
+
     history = subparsers.add_parser("history", help="查看截图历史")
     history.add_argument("--limit", type=int, default=20, help="显示条数（默认 20）")
     history.add_argument("--json", action="store_true", help="以 JSON 输出")
     history.add_argument("--clear", action="store_true", help="清空历史记录")
+    history.add_argument("--gui", action="store_true", help="打开可浏览的历史窗口")
 
     settings = subparsers.add_parser("settings", help="查看或修改设置")
     settings.add_argument("--show", action="store_true", help="打印全部设置（JSON）")

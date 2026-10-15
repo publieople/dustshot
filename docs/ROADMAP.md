@@ -37,22 +37,28 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
 
 - done: floating layer-shell pin window, drag to move, scroll to zoom (0.15x - 4x), hover
   toolbar, copy / save / close, keyboard shortcuts, opacity and border from settings.
-- planned: several pins at once, click-through, grouping, snapping to edges, per-pin opacity
-  control in the UI.
+- done: several pins at once (CatchlightApp.spawn_pin), pin-again from the toolbar or the editor,
+  edge and centre snapping while dragging (snap.py), a centre button, click-through (only the
+  hover toolbar stays clickable) and a per-pin opacity slider.
+- planned: grouping pins, keeping the pin above a specific window.
 
 ## M4 — OCR and capture extras  (partial)
 
 - done: tesseract CLI wrapper with TSV word boxes, language discovery, 2x upscale preprocess,
   `eng+chi_sim` default, editor OCR panel and the `catchlight ocr` command (`ocr.py`).
-- planned: QR and barcode decoding, scrolling capture, automatic blur of detected sensitive text.
+- done: QR and barcode decoding through zbarimg (barcode.py, the catchlight codes command, text
+  or JSON output, region capture when no file is given).
+- planned: scrolling capture, automatic blur of detected sensitive text.
 
 ## M5 — Recording, integration, packaging  (partial)
 
 - done: `wf-recorder` backend for a region or a whole output, wall-clock limit, GIF conversion
   through ffmpeg, a small recording control window, `catchlight doctor` diagnostics, hotkey
   templates for niri / Hyprland / Sway / GNOME / KDE, CI and release workflows.
-- planned: tray icon, a browsable capture history, a ScreenCast-portal backend for compositors
-  without wlr-screencopy, Flatpak packaging, translations.
+- done: a browsable capture history window (catchlight history --gui) with thumbnails and
+  edit / copy / pin / open-folder / delete actions per entry.
+- planned: tray icon, a ScreenCast-portal backend for compositors without wlr-screencopy,
+  Flatpak packaging, translations.
 
 ## Deliberately out of scope
 

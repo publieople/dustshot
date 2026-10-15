@@ -244,7 +244,11 @@ class EditorWindow(Gtk.ApplicationWindow):
 
     def pin(self) -> None:
         image = self.document.render()
-        PinWindow(self.app, image, self.settings, position=(180, 180))
+        spawner = getattr(self.app, "spawn_pin", None)
+        if spawner is not None:
+            spawner(image, position=(180, 180))
+        else:
+            PinWindow(self.app, image, self.settings, position=(180, 180))
         self._set_status("已贴图，可拖动移动、滚轮缩放")
 
     def paste(self) -> None:

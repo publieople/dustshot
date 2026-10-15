@@ -21,6 +21,11 @@ def test_parser_lists_commands() -> None:
     assert args.command == "record"
     assert args.gif is True
     assert args.duration == 3
+    args = parser.parse_args(["codes"])
+    assert args.command == "codes"
+    args = parser.parse_args(["history", "--gui"])
+    assert args.command == "history"
+    assert args.gui is True
 
 
 def test_version_command(capsys: pytest.CaptureFixture[str]) -> None:
@@ -72,3 +77,35 @@ def test_parse_rect_and_point() -> None:
     assert cli.parse_point("10,20") == (10, 20)
     with pytest.raises(SystemExit):
         cli.parse_rect("1,2,3")
+
+
+def test_codes_command_prints_symbols(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from PIL import Image
+
+    from catchlight import barcode
+
+    monkeypatch.setattr(cli, "load_image", lambda path: Image.new("RGB", (8, 8)))
+    monkeypatch.setattr(
+        barcode,
+        "decode",
+        lambda image, **kwargs: [barcode.Code("hello", "QR-Code", "x.png")],
+    )
+    assert cli.main(["codes", "x.png"]) == 0
+    assert "QR-Code\thello" in capsys.readouterr().out
+
+
+def test_codes_command_reports_empty(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from PIL import Image
+
+    from catchlight import barcode
+
+    monkeypatch.setattr(cli, "load_image", lambda path: Image.new("RGB", (8, 8)))
+    monkeypatch.setattr(barcode, "decode", lambda image, **kwargs: [])
+    assert cli.main(["codes", "x.png"]) == 0
+    assert "没有找到" in capsys.readouterr().err

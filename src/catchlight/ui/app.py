@@ -20,6 +20,7 @@ from ..config import Settings
 from ..history import History
 from ..record import Recorder, RecordError
 from .editor import EditorWindow
+from .history_window import HistoryWindow
 from .pin import PinWindow
 
 
@@ -123,6 +124,7 @@ class CatchlightApp(Gtk.Application):
         self.history = History()
         self.editors: list[EditorWindow] = []
         self.pins: list[PinWindow] = []
+        self.extra: list[Any] = []
         self.recording_result: Any = None
         self.recording_error: str | None = None
         self._started = False
@@ -171,10 +173,64 @@ class CatchlightApp(Gtk.Application):
     def _run_pin(self) -> None:
         position = self.options.get("position") or (140, 140)
         scale = float(self.options.get("scale", 1.0))
+        offset = 0
         for image in self.images:
-            window = PinWindow(self, image, self.settings, position=position, scale=scale)
-            self.pins.append(window)
-            window.present()
+            self.spawn_pin(image, position=(position[0] + offset, position[1] + offset), scale=scale)
+            offset += 28
+
+    def spawn_pin(
+        self,
+        image: Image.Image,
+        position: tuple[int, int] = (140, 140),
+        scale: float = 1.0,
+    ) -> PinWindow:
+        """Create a pin window and keep the application alive while it is open."""
+
+        window = PinWindow(
+            self,
+            image,
+            self.settings,
+            position=position,
+            scale=scale,
+            on_close=self.forget_pin,
+        )
+        self.pins.append(window)
+        window.present()
+        return window
+
+    def forget_pin(self, window: Any) -> None:
+        if window in self.pins:
+            self.pins.remove(window)
+        self._maybe_quit()
+
+    def add_extra(self, window: Any) -> None:
+        """Track one more window that should keep the application alive."""
+
+        self.extra.append(window)
+
+    def _on_extra_done(self, window: Any) -> None:
+        if window in self.extra:
+            self.extra.remove(window)
+        self._maybe_quit()
+
+    def _maybe_quit(self) -> None:
+        if not self.editors and not self.pins and not self.extra:
+            self.quit()
+
+    def _run_history(self) -> None:
+        window = HistoryWindow(
+            self,
+            self.settings,
+            limit=int(self.options.get("limit", 60)),
+            on_close=self._on_extra_done,
+        )
+        self.add_extra(window)
+        window.present()
+
+    def open_editor_path(self, path: str) -> EditorWindow:
+        """Open the editor on an existing file."""
+
+        return self._open_editor(load_image(path), source=path)
 
     def _run_record(self) -> None:
         options = self.options
@@ -203,8 +259,7 @@ class CatchlightApp(Gtk.Application):
     def _on_editor_done(self, window: EditorWindow) -> None:
         if window in self.editors:
             self.editors.remove(window)
-        if not self.editors and not self.pins:
-            self.quit()
+        self._maybe_quit()
 
     # ------------------------------------------------------------------ finish
     def finish_recording(self) -> None:
