@@ -109,3 +109,37 @@ def test_codes_command_reports_empty(
     monkeypatch.setattr(barcode, "decode", lambda image, **kwargs: [])
     assert cli.main(["codes", "x.png"]) == 0
     assert "没有找到" in capsys.readouterr().err
+
+
+def test_parser_accepts_redact() -> None:
+    parser = cli.build_parser()
+    args = parser.parse_args(["redact", "--mode", "blur", "--kinds", "email"])
+    assert args.command == "redact"
+    assert args.mode == "blur"
+    assert args.kinds == "email"
+
+
+def test_redact_command_masks_matches(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    from PIL import Image
+
+    from catchlight import ocr
+
+    monkeypatch.setattr(cli, "load_image", lambda path: Image.new("RGB", (60, 20), "white"))
+    monkeypatch.setattr(
+        ocr,
+        "recognize",
+        lambda image, **kwargs: ocr.OcrResult(
+            text="po@example.com",
+            words=[ocr.WordBox("po@example.com", 2, 2, 50, 14, 95.0, 1001)],
+            languages="eng",
+            confidence=95.0,
+        ),
+    )
+    target = tmp_path / "out.png"
+    assert cli.main(["redact", "x.png", "--output", str(target)]) == 0
+    assert "email" in capsys.readouterr().out
+    assert target.exists()

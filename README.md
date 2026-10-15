@@ -32,6 +32,11 @@ hover toolbar to copy, save, pin again, centre, click through or fade.*
 
 *The browsable capture history (`catchlight history --gui`).*
 
+![Sensitive text redaction](docs/images/redact.png)
+
+*`catchlight redact`: OCR finds emails, phone numbers, ID and bank card numbers and API keys,
+then covers each hit with an opaque block (mosaic and blur are available too).*
+
 ## Features
 
 - **Region capture** on a frozen backdrop: per-output full-screen overlay, dimmed outside area,
@@ -46,6 +51,9 @@ hover toolbar to copy, save, pin again, centre, click through or fade.*
   by default and 2x upscaling preprocess.
 - **QR and barcodes**: `catchlight codes` decodes QR codes and 1D barcodes with `zbarimg`,
   either from a file or from a fresh region capture, as text or JSON.
+- **Sensitive text**: `catchlight redact` runs OCR, finds emails, phone numbers, ID and bank
+  card numbers and API keys, then paints opaque blocks over them (solid, mosaic or blur); the
+  editor exposes the same pass as a toolbar button.
 - **Recording**: region or whole output to MP4 (H.264) through `wf-recorder`, optional GIF
   conversion through ffmpeg, wall-clock limit, a small stop-recording window.
 - **Extras**: a browsable capture history window (`catchlight history --gui`), `.cln`
@@ -108,6 +116,7 @@ catchlight edit IMAGE          # open the editor on an existing file
 catchlight pin IMAGE           # pin an image on the screen
 catchlight ocr [IMAGE]         # recognise text (captures a region when no file is given)
 catchlight codes [IMAGE]       # decode QR codes and barcodes
+catchlight redact [IMAGE]      # find and cover sensitive text
 catchlight record --duration 15 --gif
 catchlight history --limit 10
 catchlight history --gui       # browse the capture history

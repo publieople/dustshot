@@ -43,7 +43,8 @@ def _draw_rect(canvas: Image.Image, item: RectItem, blender) -> None:
     box = [item.x, item.y, item.right - 1, item.bottom - 1]
     alpha = item.style.alpha()
     outline = _rgba(item.style.color, alpha)
-    fill = _rgba(item.style.color, alpha * 0.35) if item.style.fill else None
+    fill = _rgba(item.style.color, alpha if item.style.solid else alpha * 0.35)
+    fill = fill if item.style.fill else None
     width = max(1, item.style.width)
     if item.radius > 0:
         if fill is not None:
@@ -63,7 +64,8 @@ def _draw_ellipse(canvas: Image.Image, item: EllipseItem, blender) -> None:
     box = [item.x, item.y, item.right - 1, item.bottom - 1]
     alpha = item.style.alpha()
     if item.style.fill:
-        draw.ellipse(box, fill=_rgba(item.style.color, alpha * 0.35))
+        spread = alpha if item.style.solid else alpha * 0.35
+        draw.ellipse(box, fill=_rgba(item.style.color, spread))
     draw.ellipse(box, outline=_rgba(item.style.color, alpha), width=max(1, item.style.width))
     blender(layer)
 

@@ -29,6 +29,7 @@ EPILOG = """常用示例：
     catchlight record --gif            框选后录制并转 GIF
     catchlight pin shot.png            把已有图片钉在屏幕上
     catchlight codes                   框选并识别二维码/条码
+    catchlight redact                 框选并自动遮住敏感信息
     catchlight history --gui           浏览截图历史
     catchlight doctor                  检查运行环境
 """
@@ -316,6 +317,72 @@ def command_codes(args: argparse.Namespace, settings: Settings, store: SettingsS
     return 0
 
 
+def command_redact(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
+    from . import redact
+    from .annotation.render import render as render_image
+    from .annotation.render import render_to_file
+
+    if args.file:
+        image = load_image(args.file)
+    else:
+        result = pick_region(settings)
+        if not result.confirmed:
+            print("已取消")
+            return 0
+        image = capture_region(result.region) if result.region is not None else capture_full()
+
+    kinds = (
+        tuple(piece.strip() for piece in args.kinds.split(",") if piece.strip())
+        if args.kinds
+        else redact.KINDS
+    )
+    unknown = [kind for kind in kinds if kind not in redact.PATTERNS]
+    if unknown:
+        print(f"未知的类型：{', '.join(unknown)}", file=sys.stderr)
+        return 2
+
+    languages = args.lang or settings.ocr.languages
+    try:
+        outcome = ocr.recognize(image, languages=languages, psm=args.psm)
+    except ocr.OcrError as exc:
+        print(f"OCR 失败：{exc}", file=sys.stderr)
+        return 2
+
+    matches = redact.find_sensitive(outcome.words, kinds=kinds)
+    if not matches:
+        print("没有发现敏感信息", file=sys.stderr)
+        return 0
+
+    items = redact.mask_items(
+        matches,
+        block=args.block or settings.annotation.mosaic_block,
+        mode=args.mode,
+        blur_radius=settings.annotation.blur_radius,
+        padding=args.padding,
+    )
+    if args.json:
+        print(json.dumps([match.to_dict() for match in matches], ensure_ascii=False, indent=2))
+    else:
+        for match in matches:
+            print(f"{match.kind}	{match.text}")
+
+    rendered = render_image(image, items)
+    if args.output:
+        target = Path(args.output).expanduser()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        render_to_file(image, items, target)
+        print(f"已脱敏并保存：{target}")
+    elif not args.edit:
+        note = json.dumps([match.to_dict() for match in matches], ensure_ascii=False)
+        saved = store_image(rendered, settings, kind="redact", note=note)
+        print(f"已脱敏并保存：{saved}")
+    if args.copy:
+        clipboard.copy_image(rendered)
+    if args.edit:
+        return open_editor(rendered, settings, source=args.file or "")
+    return 0
+
+
 def command_record(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
     if args.full:
         return start_recording(args, settings, region=None)
@@ -559,6 +626,7 @@ COMMANDS = {
     "ocr": command_ocr,
     "record": command_record,
     "codes": command_codes,
+    "redact": command_redact,
     "history": command_history,
     "settings": command_settings,
     "hotkeys": command_hotkeys,
@@ -638,6 +706,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     codes.add_argument("--copy", action="store_true", help="把识别结果复制到剪贴板")
     codes.add_argument("--json", action="store_true", help="以 JSON 输出")
+
+    redact_parser = subparsers.add_parser("redact", help="找出并遮住图片中的敏感文字")
+    redact_parser.add_argument("file", nargs="?", help="图片路径；省略时先框选截图")
+    redact_parser.add_argument("--lang", help="OCR 语言，默认取设置")
+    redact_parser.add_argument("--psm", type=int, default=6, help="tesseract 页面分割模式（默认 6）")
+    redact_parser.add_argument("--kinds", metavar="LIST", help="只查找这些类型，逗号分隔")
+    redact_parser.add_argument(
+        "--mode", choices=["solid", "mosaic", "blur"], default="solid", help="遮住方式"
+    )
+    redact_parser.add_argument("--padding", type=int, default=4, help="每块外扩像素（默认 4）")
+    redact_parser.add_argument("--block", type=int, help="马赛克块大小")
+    redact_parser.add_argument("--edit", action="store_true", help="在编辑器里打开结果")
+    redact_parser.add_argument("--output", metavar="PATH", help="输出文件路径")
+    redact_parser.add_argument("--copy", action="store_true", help="把脱敏后的图片复制到剪贴板")
+    redact_parser.add_argument("--json", action="store_true", help="以 JSON 输出命中的内容")
 
     history = subparsers.add_parser("history", help="查看截图历史")
     history.add_argument("--limit", type=int, default=20, help="显示条数（默认 20）")

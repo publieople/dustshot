@@ -44,3 +44,12 @@ def test_render_to_file(tmp_path) -> None:
 
 def test_difference_ratio_identical() -> None:
     assert difference_ratio(white(), white()) == 0.0
+
+
+def test_solid_fill_covers_the_region_opaquely() -> None:
+    base = white()
+    region = {"x": 10, "y": 10, "width": 40, "height": 30}
+    solid = RectItem(style=Style(color="#101114", fill=True, solid=True), **region)
+    soft = RectItem(style=Style(color="#101114", fill=True), **region)
+    assert render(base, [solid]).getpixel((30, 25)) == (16, 17, 20)
+    assert render(base, [soft]).getpixel((30, 25)) != (16, 17, 20)

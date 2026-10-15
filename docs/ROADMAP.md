@@ -48,7 +48,10 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
   `eng+chi_sim` default, editor OCR panel and the `catchlight ocr` command (`ocr.py`).
 - done: QR and barcode decoding through zbarimg (barcode.py, the catchlight codes command, text
   or JSON output, region capture when no file is given).
-- planned: scrolling capture, automatic blur of detected sensitive text.
+- done: sensitive text detection (redact.py): email, phone, ID card, bank card and API key
+  patterns over OCR word boxes, opaque or mosaic or blur masking, `catchlight redact` command
+  and an editor toolbar button.
+- planned: scrolling capture.
 
 ## M5 — Recording, integration, packaging  (partial)
 

@@ -10,7 +10,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, GLib, Gtk
 
-from .. import clipboard, ocr, output
+from .. import clipboard, ocr, output, redact
 from ..annotation.document import Document
 from ..config import DEFAULT_PALETTE
 from ..history import History
@@ -52,6 +52,7 @@ class EditorWindow(Gtk.ApplicationWindow):
             ("保存并复制", "保存、复制并关闭", self.finish),
             ("贴图", "把当前图像贴到屏幕 (Ctrl+P)", self.pin),
             ("OCR", "识别图中的文字", self.toggle_ocr),
+            ("脱敏", "自动遮住邮箱、电话、证件号等敏感文字", self.redact),
             ("关闭", "关闭 (Ctrl+W)", self.close),
         ):
             header.pack_end(_header_button(label, tip, callback))
@@ -294,6 +295,46 @@ class EditorWindow(Gtk.ApplicationWindow):
         buffer = self.ocr_view.get_buffer()
         buffer.set_text(text)
         self._set_status(f"识别完成，共 {len(text)} 个字符")
+        return False
+
+    def redact(self) -> None:
+        """Find private text in the current image and mask it."""
+        if self._ocr_busy:
+            return
+        self._ocr_busy = True
+        self._set_status("正在查找敏感信息…")
+        image = self.document.render()
+        languages = getattr(getattr(self.settings, "ocr", None), "languages", "eng+chi_sim")
+        annotation = getattr(self.settings, "annotation", None)
+        block = int(getattr(annotation, "mosaic_block", 12) or 12)
+        blur = int(getattr(annotation, "blur_radius", 12) or 12)
+
+        def work() -> None:
+            try:
+                result = ocr.recognize(image, languages=str(languages or "eng+chi_sim"))
+                matches = redact.find_sensitive(result.words)
+                items = redact.mask_items(matches, block=block, blur_radius=blur)
+            except Exception as exc:  # pragma: no cover - depends on tesseract
+                GLib.idle_add(self._apply_redaction, [], f"查找失败：{exc}")
+                return
+            GLib.idle_add(self._apply_redaction, items, "")
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def _apply_redaction(self, items: list[Any], error: str) -> bool:
+        self._ocr_busy = False
+        if error:
+            self._set_status(error)
+            return False
+        if not items:
+            self._set_status("没有发现敏感信息")
+            return False
+        self.document.push_undo()
+        for item in items:
+            self.document.items.append(item)
+        self.document.touch()
+        self.canvas.refresh()
+        self._set_status(f"已遮住 {len(items)} 处敏感信息")
         return False
 
     def _close_request(self) -> None:

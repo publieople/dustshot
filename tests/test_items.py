@@ -86,3 +86,11 @@ def test_arrow_head_points() -> None:
     arrow = ArrowItem(x1=0, y1=0, x2=100, y2=0)
     assert len(arrow.head_points()) == 3
     assert arrow.angle() == pytest.approx(0.0)
+
+
+def test_style_carries_the_solid_flag() -> None:
+    style = Style(color="#101114", fill=True, solid=True)
+    payload = style.to_dict()
+    assert payload["solid"] is True
+    assert Style.from_dict(payload) == style
+    assert Style.from_dict({"color": "#ff3b30"}).solid is False

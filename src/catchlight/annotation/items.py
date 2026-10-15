@@ -60,6 +60,7 @@ class Style:
     width: int = 3
     fill: bool = False
     opacity: float = 1.0
+    solid: bool = False
 
     def rgb(self) -> tuple[int, int, int]:
         return _rgb(self.color)
@@ -68,7 +69,13 @@ class Style:
         return max(0.0, min(1.0, self.opacity * _alpha(self.color)))
 
     def to_dict(self) -> dict[str, Any]:
-        return {"color": self.color, "width": self.width, "fill": self.fill, "opacity": self.opacity}
+        return {
+            "color": self.color,
+            "width": self.width,
+            "fill": self.fill,
+            "opacity": self.opacity,
+            "solid": self.solid,
+        }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> Style:
@@ -78,6 +85,7 @@ class Style:
             width=int(data.get("width", 3)),
             fill=bool(data.get("fill", False)),
             opacity=float(data.get("opacity", 1.0)),
+            solid=bool(data.get("solid", False)),
         )
 
 
