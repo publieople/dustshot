@@ -77,7 +77,12 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
   plain `videoconvert` pipeline, so a GL import pipeline is tried second. Verified on a live niri
   session: a 2560x1600 PNG that matches `grim` on a static desktop (0.6% of pixels differ, mostly
   the clock), with the D-Bus dance covered by cross-process tests under `dbus-run-session`.
-- planned: a tested Flatpak build, translations.
+- done: translations (i18n.py): every interface string goes through gettext, `po/catchlight.pot`
+  carries 285 messages, the English catalogue is fully translated and compiled into
+  `src/catchlight/locale/en/LC_MESSAGES/catchlight.mo` (shipped as package data), and
+  `CATCHLIGHT_LANG` / `CATCHLIGHT_LOCALEDIR` drive the lookup, with tests for the catalogue
+  completeness and the `python3 -m catchlight.i18n compile` tool.
+- planned: a tested Flatpak build.
 
 ## Deliberately out of scope
 

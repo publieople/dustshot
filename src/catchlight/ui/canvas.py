@@ -27,6 +27,7 @@ from ..annotation.items import (
     TextItem,
 )
 from ..capture.base import Geometry
+from ..i18n import _
 from .pixbuf import to_pixbuf
 
 ACCENT = (0.98, 0.30, 0.24)
@@ -34,17 +35,17 @@ GRID_BG = (0.10, 0.11, 0.13)
 
 #: tool key -> (label, hint)
 TOOLS: tuple[tuple[str, str], ...] = (
-    ("select", "选择"),
-    ("rect", "矩形"),
-    ("ellipse", "椭圆"),
-    ("line", "直线"),
-    ("arrow", "箭头"),
-    ("pencil", "画笔"),
-    ("highlighter", "荧光笔"),
-    ("text", "文字"),
-    ("serial", "序号"),
-    ("mosaic", "马赛克"),
-    ("blur", "模糊"),
+    ("select", _("选择")),
+    ("rect", _("矩形")),
+    ("ellipse", _("椭圆")),
+    ("line", _("直线")),
+    ("arrow", _("箭头")),
+    ("pencil", _("画笔")),
+    ("highlighter", _("荧光笔")),
+    ("text", _("文字")),
+    ("serial", _("序号")),
+    ("mosaic", _("马赛克")),
+    ("blur", _("模糊")),
 )
 
 BOX_TOOLS = ("rect", "ellipse", "mosaic", "blur")
@@ -54,17 +55,17 @@ MIN_DRAG = 3
 MAX_DISPLAY = 1600
 
 TOOL_HINTS = {
-    "select": "拖动图元移动，拖手柄缩放；Delete 删除",
-    "rect": "拖动绘制矩形",
-    "ellipse": "拖动绘制椭圆",
-    "line": "拖动绘制直线",
-    "arrow": "拖动绘制箭头",
-    "pencil": "按住拖动自由绘制",
-    "highlighter": "按住拖动绘制荧光笔",
-    "text": "单击后输入文字，回车确认",
-    "serial": "单击添加递增序号",
-    "mosaic": "拖动框选马赛克区域",
-    "blur": "拖动框选模糊区域",
+    "select": _("拖动图元移动，拖手柄缩放；Delete 删除"),
+    "rect": _("拖动绘制矩形"),
+    "ellipse": _("拖动绘制椭圆"),
+    "line": _("拖动绘制直线"),
+    "arrow": _("拖动绘制箭头"),
+    "pencil": _("按住拖动自由绘制"),
+    "highlighter": _("按住拖动绘制荧光笔"),
+    "text": _("单击后输入文字，回车确认"),
+    "serial": _("单击添加递增序号"),
+    "mosaic": _("拖动框选马赛克区域"),
+    "blur": _("拖动框选模糊区域"),
 }
 
 
@@ -520,7 +521,7 @@ class Canvas(Gtk.DrawingArea):
         popover = Gtk.Popover()
         popover.set_parent(self)
         entry = Gtk.Entry()
-        entry.set_placeholder_text("输入文字后回车")
+        entry.set_placeholder_text(_("输入文字后回车"))
         entry.set_width_chars(24)
         popover.set_child(entry)
         rect = Gdk.Rectangle()

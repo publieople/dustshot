@@ -21,6 +21,7 @@ from PIL import Image
 
 from ..capture.base import Frame, Geometry, OutputInfo
 from ..capture.screencopy import CaptureError, capture_output, list_outputs
+from ..i18n import _
 from ..selection import SelectionMode, SelectionState
 
 ACCENT = (1.0, 0.231, 0.188, 1.0)
@@ -196,7 +197,7 @@ class OutputOverlay(Gtk.ApplicationWindow):
         region = self.state.region
         if region is None or region.is_empty():
             if self.state.bounds.width and self.state.bounds.height:
-                self.flash("先拖出一个区域，或按 Ctrl+A 全选")
+                self.flash(_("先拖出一个区域，或按 Ctrl+A 全选"))
             return
         self.selector.finish("confirm", region=region, key=key)
 
@@ -352,7 +353,7 @@ class OutputOverlay(Gtk.ApplicationWindow):
         PangoCairo.show_layout(cr, _make_layout(cr, text, 11))
 
     def _draw_hints(self, cr, width: int, height: int) -> None:
-        hints = (
+        hints = _(
             "拖动选择区域    回车 保存并复制    Ctrl+C 复制    空格/Ctrl+A 全选    Ctrl+R 录制    Esc 取消"
         )
         layout = _make_layout(cr, hints, 12)

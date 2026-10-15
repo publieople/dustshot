@@ -18,6 +18,7 @@ from .. import clipboard, output
 from ..annotation.document import Document
 from ..config import Settings
 from ..history import History
+from ..i18n import _
 from ..pinboard import PinBoard
 from ..record import Recorder, RecordError
 from .editor import EditorWindow
@@ -58,7 +59,7 @@ class RecordControlWindow(Gtk.ApplicationWindow):
         self.recorder = recorder
         self.options = options
         self.started = time.time()
-        self.set_title("Catchlight 录制")
+        self.set_title(_("Catchlight 录制"))
         self.set_default_size(320, 120)
 
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -66,14 +67,14 @@ class RecordControlWindow(Gtk.ApplicationWindow):
         box.set_margin_bottom(16)
         box.set_margin_start(16)
         box.set_margin_end(16)
-        self.label = Gtk.Label(label="正在录制 00:00")
+        self.label = Gtk.Label(label=_("正在录制 00:00"))
         self.label.add_css_class("title-3")
         box.append(self.label)
         hint = Gtk.Label(label=f"{recorder.backend} -> {recorder.output}")
         hint.add_css_class("dim-label")
         hint.set_ellipsize(3)
         box.append(hint)
-        stop = Gtk.Button(label="停止录制")
+        stop = Gtk.Button(label=_("停止录制"))
         stop.add_css_class("suggested-action")
         stop.connect("clicked", lambda _b: self.finish())
         box.append(stop)
@@ -89,7 +90,9 @@ class RecordControlWindow(Gtk.ApplicationWindow):
     def _tick(self) -> bool:
         elapsed = time.time() - self.started
         minutes, seconds = int(elapsed // 60), int(elapsed % 60)
-        self.label.set_text(f"正在录制 {minutes:02d}:{seconds:02d}")
+        self.label.set_text(
+            _("正在录制 {minutes:02d}:{seconds:02d}").format(minutes=minutes, seconds=seconds)
+        )
         return True
 
     def _on_signal(self, *args: Any) -> bool:
@@ -288,7 +291,7 @@ class CatchlightApp(Gtk.Application):
                 audio=bool(options.get("audio")),
             )
         except RecordError as exc:
-            print(f"录制失败：{exc}", file=__import__("sys").stderr)
+            print(_("录制失败：{exc}").format(exc=exc), file=__import__("sys").stderr)
             self.quit()
             return
         self._recorder = recorder
@@ -305,7 +308,11 @@ class CatchlightApp(Gtk.Application):
         if self._recorder is None or self.recording_result is None:
             return
         result = self.recording_result
-        print(f"已保存录制：{result.path} ({result.duration:.1f}s, {result.backend})")
+        print(
+            _("已保存录制：{path} ({duration:.1f}s, {backend})").format(
+                path=result.path, duration=result.duration, backend=result.backend
+            )
+        )
         options = self.options
         if options.get("gif"):
             try:
@@ -313,9 +320,9 @@ class CatchlightApp(Gtk.Application):
                     fps=int(options.get("gif_fps", self.settings.recording.gif_fps)),
                     width=int(options.get("gif_width", self.settings.recording.gif_width)),
                 )
-                print(f"已生成 GIF：{target}")
+                print(_("已生成 GIF：{target}").format(target=target))
             except RecordError as exc:
-                print(f"GIF 转换失败：{exc}", file=__import__("sys").stderr)
+                print(_("GIF 转换失败：{exc}").format(exc=exc), file=__import__("sys").stderr)
 
     def _capture_full(self) -> Image.Image:
         from ..capture import screencopy
@@ -336,7 +343,10 @@ def run_gui(
     app = CatchlightApp(settings, action, images=images, options=options, region=region)
     status = app.run([])
     if app.recording_error:
-        print(f"录制出错：{app.recording_error}", file=__import__("sys").stderr)
+        print(
+            _("录制出错：{recording_error}").format(recording_error=app.recording_error),
+            file=__import__("sys").stderr,
+        )
         return 1
     if action == "record":
         app.finish_recording()

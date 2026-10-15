@@ -16,12 +16,13 @@ from typing import Any
 from . import __version__, barcode, clipboard, ocr, scroll
 from .config import Settings, SettingsStore, cache_dir, config_path, data_dir, ensure_dirs
 from .history import History
+from .i18n import _
 
 PROGRAM = "catchlight"
 
-DESCRIPTION = "Wayland 原生的截图、标注与贴图工具"
+DESCRIPTION = _("Wayland 原生的截图、标注与贴图工具")
 
-EPILOG = """常用示例：
+EPILOG = _("""常用示例：
     catchlight                         框选截图并打开编辑器
     catchlight full                    截取全部输出
     catchlight region --pin            框选后直接钉在屏幕上
@@ -34,7 +35,7 @@ EPILOG = """常用示例：
     catchlight history --gui           浏览截图历史
     catchlight tray                   在系统托盘里驻留一个图标
     catchlight doctor                  检查运行环境
-"""
+""")
 
 
 # --------------------------------------------------------------------------- helpers
@@ -57,17 +58,17 @@ def parse_rect(text: str) -> Any:
 
     parts = [piece.strip() for piece in text.replace("x", ",").split(",")]
     if len(parts) != 4:
-        raise SystemExit("区域格式应为 x,y,w,h")
+        raise SystemExit(_("区域格式应为 x,y,w,h"))
     try:
         return Geometry(*(int(float(piece)) for piece in parts))
     except ValueError as exc:
-        raise SystemExit(f"区域必须是数字：{exc}") from exc
+        raise SystemExit(_("区域必须是数字：{exc}").format(exc=exc)) from exc
 
 
 def parse_point(text: str) -> tuple[int, int]:
     pieces = [piece.strip() for piece in text.split(",")]
     if len(pieces) != 2:
-        raise SystemExit("坐标格式应为 x,y")
+        raise SystemExit(_("坐标格式应为 x,y"))
     return int(pieces[0]), int(pieces[1])
 
 
@@ -78,7 +79,7 @@ def load_image(path: str) -> Any:
         return Image.open(sys.stdin.buffer).convert("RGB")
     target = Path(path).expanduser()
     if not target.exists():
-        raise SystemExit(f"找不到文件：{target}")
+        raise SystemExit(_("找不到文件：{target}").format(target=target))
     image = Image.open(str(target))
     image.load()
     return image.convert("RGB")
@@ -212,7 +213,7 @@ def command_capture(args: argparse.Namespace, settings: Settings, store: Setting
         if result.key == "ctrl-r" and result.region is not None:
             return start_recording(args, settings, region=result.region)
         if not result.confirmed:
-            print("已取消")
+            print(_("已取消"))
             return 0
         if result.full:
             image = capture_full(backend)
@@ -231,16 +232,16 @@ def command_capture(args: argparse.Namespace, settings: Settings, store: Setting
 
     if result is not None and result.key == "ctrl-c":
         clipboard.copy_image(image)
-        print("已复制到剪贴板")
+        print(_("已复制到剪贴板"))
         return 0
 
     if result is not None and result.key == "ctrl-s":
         path = store_image(image, settings, kind=source, note=note, copy=False)
-        print(f"已保存：{path}")
+        print(_("已保存：{path}").format(path=path))
         return 0
 
     path = store_image(image, settings, kind=source, note=note)
-    print(f"已保存：{path}")
+    print(_("已保存：{path}").format(path=path))
 
     if getattr(args, "no_editor", False):
         return 0
@@ -263,7 +264,7 @@ def command_pin(args: argparse.Namespace, settings: Settings, store: SettingsSto
     else:
         result = pick_region(settings)
         if not result.confirmed:
-            print("已取消")
+            print(_("已取消"))
             return 0
         image = capture_region(result.region) if result.region is not None else capture_full()
     position = parse_point(args.position) if args.position else (140, 140)
@@ -276,7 +277,7 @@ def command_ocr(args: argparse.Namespace, settings: Settings, store: SettingsSto
     else:
         result = pick_region(settings)
         if not result.confirmed:
-            print("已取消")
+            print(_("已取消"))
             return 0
         image = capture_region(result.region) if result.region is not None else capture_full()
 
@@ -284,7 +285,7 @@ def command_ocr(args: argparse.Namespace, settings: Settings, store: SettingsSto
     try:
         outcome = ocr.recognize(image, languages=languages, psm=args.psm)
     except ocr.OcrError as exc:
-        print(f"OCR 失败：{exc}", file=sys.stderr)
+        print(_("OCR 失败：{exc}").format(exc=exc), file=sys.stderr)
         return 2
 
     if args.json:
@@ -297,8 +298,10 @@ def command_ocr(args: argparse.Namespace, settings: Settings, store: SettingsSto
         print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
         print(outcome.text)
-        summary = (
-            f"--- {len(outcome.words)} 个词，置信度 {outcome.confidence:.2f}，语言 {outcome.languages} ---"
+        summary = _("--- {words} 个词，置信度 {confidence:.2f}，语言 {languages} ---").format(
+            words=len(outcome.words),
+            confidence=outcome.confidence,
+            languages=outcome.languages,
         )
         print(summary, file=sys.stderr)
     if args.copy:
@@ -312,20 +315,20 @@ def command_codes(args: argparse.Namespace, settings: Settings, store: SettingsS
     else:
         result = pick_region(settings)
         if not result.confirmed:
-            print("已取消")
+            print(_("已取消"))
             return 0
         image = capture_region(result.region) if result.region is not None else capture_full()
 
     try:
         codes = barcode.decode(image, command=args.decoder)
     except barcode.BarcodeError as exc:
-        print(f"条码识别失败：{exc}", file=sys.stderr)
+        print(_("条码识别失败：{exc}").format(exc=exc), file=sys.stderr)
         return 2
 
     if args.json:
         print(json.dumps([code.to_dict() for code in codes], ensure_ascii=False, indent=2))
     elif not codes:
-        print("没有找到条码或二维码", file=sys.stderr)
+        print(_("没有找到条码或二维码"), file=sys.stderr)
     else:
         for code in codes:
             label = code.kind or "barcode"
@@ -345,7 +348,7 @@ def command_redact(args: argparse.Namespace, settings: Settings, store: Settings
     else:
         result = pick_region(settings)
         if not result.confirmed:
-            print("已取消")
+            print(_("已取消"))
             return 0
         image = capture_region(result.region) if result.region is not None else capture_full()
 
@@ -356,19 +359,19 @@ def command_redact(args: argparse.Namespace, settings: Settings, store: Settings
     )
     unknown = [kind for kind in kinds if kind not in redact.PATTERNS]
     if unknown:
-        print(f"未知的类型：{', '.join(unknown)}", file=sys.stderr)
+        print(_("未知的类型：{types}").format(types=", ".join(unknown)), file=sys.stderr)
         return 2
 
     languages = args.lang or settings.ocr.languages
     try:
         outcome = ocr.recognize(image, languages=languages, psm=args.psm)
     except ocr.OcrError as exc:
-        print(f"OCR 失败：{exc}", file=sys.stderr)
+        print(_("OCR 失败：{exc}").format(exc=exc), file=sys.stderr)
         return 2
 
     matches = redact.find_sensitive(outcome.words, kinds=kinds)
     if not matches:
-        print("没有发现敏感信息", file=sys.stderr)
+        print(_("没有发现敏感信息"), file=sys.stderr)
         return 0
 
     items = redact.mask_items(
@@ -389,11 +392,11 @@ def command_redact(args: argparse.Namespace, settings: Settings, store: Settings
         target = Path(args.output).expanduser()
         target.parent.mkdir(parents=True, exist_ok=True)
         render_to_file(image, items, target)
-        print(f"已脱敏并保存：{target}")
+        print(_("已脱敏并保存：{target}").format(target=target))
     elif not args.edit:
         note = json.dumps([match.to_dict() for match in matches], ensure_ascii=False)
         saved = store_image(rendered, settings, kind="redact", note=note)
-        print(f"已脱敏并保存：{saved}")
+        print(_("已脱敏并保存：{saved}").format(saved=saved))
     if args.copy:
         clipboard.copy_image(rendered)
     if args.edit:
@@ -410,7 +413,7 @@ def command_scroll(args: argparse.Namespace, settings: Settings, store: Settings
     explicit = getattr(args, "rect", None)
     region = parse_rect(explicit) if explicit else pick_region(settings).region
     if region is None:
-        print("已取消")
+        print(_("已取消"))
         return 0
     remember_region(settings, region)
     with contextlib.suppress(OSError):
@@ -422,7 +425,7 @@ def command_scroll(args: argparse.Namespace, settings: Settings, store: Settings
     if getattr(args, "manual", False):
 
         def advance() -> None:
-            input("滚动到下一屏后按回车继续…")
+            input(_("滚动到下一屏后按回车继续…"))
 
     else:
 
@@ -430,7 +433,12 @@ def command_scroll(args: argparse.Namespace, settings: Settings, store: Settings
             scroll.advance_scroll(getattr(args, "advance", None))
 
     def announce(index: int, image: Any) -> None:
-        print(f"  第 {index}/{steps} 帧：{image.width} x {image.height}", file=sys.stderr)
+        print(
+            _("  第 {index}/{steps} 帧：{width} x {height}").format(
+                index=index, steps=steps, width=image.width, height=image.height
+            ),
+            file=sys.stderr,
+        )
 
     try:
         canvas, overlaps = scroll.scroll_capture(
@@ -443,7 +451,7 @@ def command_scroll(args: argparse.Namespace, settings: Settings, store: Settings
             on_step=announce,
         )
     except scroll.ScrollError as error:
-        print(f"滚动截图失败：{error}", file=sys.stderr)
+        print(_("滚动截图失败：{error}").format(error=error), file=sys.stderr)
         return 1
 
     note = json.dumps(
@@ -459,7 +467,11 @@ def command_scroll(args: argparse.Namespace, settings: Settings, store: Settings
         path=getattr(args, "output", None),
         copy=copy,
     )
-    print(f"已保存滚动截图：{path}（{canvas.width} x {canvas.height}，{len(overlaps) + 1} 帧）")
+    print(
+        _("已保存滚动截图：{path}（{width} x {height}，{frames} 帧）").format(
+            path=path, width=canvas.width, height=canvas.height, frames=len(overlaps) + 1
+        )
+    )
 
     if getattr(args, "no_editor", False):
         return 0
@@ -473,7 +485,7 @@ def command_record(args: argparse.Namespace, settings: Settings, store: Settings
         return start_recording(args, settings, region=None)
     result = pick_region(settings)
     if not result.confirmed:
-        print("已取消")
+        print(_("已取消"))
         return 0
     return start_recording(args, settings, region=result.region)
 
@@ -488,14 +500,14 @@ def command_history(args: argparse.Namespace, settings: Settings, store: Setting
     if args.clear:
         history.entries = []
         history.save()
-        print("已清空历史记录")
+        print(_("已清空历史记录"))
         return 0
     entries = history.recent(limit=args.limit)
     if args.json:
         print(json.dumps([asdict(entry) for entry in entries], ensure_ascii=False, indent=2))
         return 0
     if not entries:
-        print("还没有截图记录")
+        print(_("还没有截图记录"))
         return 0
     for entry in entries:
         when = datetime.fromtimestamp(entry.created).strftime("%Y-%m-%d %H:%M:%S")
@@ -524,38 +536,38 @@ def coerce(current: Any, raw: str) -> Any:
 def set_setting(settings: Settings, assignment: str) -> None:
     key, separator, raw = assignment.partition("=")
     if not separator:
-        raise SystemExit("设置格式应为 段.字段=值，例如 capture.image_format=jpg")
-    section, _, field = key.strip().partition(".")
+        raise SystemExit(_("设置格式应为 段.字段=值，例如 capture.image_format=jpg"))
+    section, _sep, field = key.strip().partition(".")
     target = getattr(settings, section, None)
     if target is None:
         sections = ["capture", "annotation", "pin", "ocr", "recording"]
-        raise SystemExit("没有这个设置段：{}（可用：{}）".format(section, ", ".join(sections)))
+        raise SystemExit(_("没有这个设置段：{}（可用：{}）").format(section, ", ".join(sections)))
     if not hasattr(target, field):
         fields = sorted(vars(target))
-        raise SystemExit("没有这个字段：{}.{}（可用：{}）".format(section, field, ", ".join(fields)))
+        raise SystemExit(_("没有这个字段：{}.{}（可用：{}）").format(section, field, ", ".join(fields)))
     try:
         setattr(target, field, coerce(getattr(target, field), raw))
     except (TypeError, ValueError) as exc:
-        raise SystemExit(f"值不合法：{exc}") from exc
+        raise SystemExit(_("值不合法：{exc}").format(exc=exc)) from exc
 
 
 def command_settings(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
     if args.reset:
         store.reset()
-        print("已恢复默认设置")
+        print(_("已恢复默认设置"))
         return 0
     if args.set:
         for assignment in args.set:
             set_setting(settings, assignment)
         path = store.save()
-        print(f"已写入 {path}")
+        print(_("已写入 {path}").format(path=path))
         return 0
     if args.show:
         print(json.dumps(asdict(store.load()), indent=2, ensure_ascii=False, sort_keys=True))
         return 0
-    print(f"配置文件：{config_path()}")
-    print(f"数据目录：{data_dir()}")
-    print(f"缓存目录：{cache_dir()}")
+    print(_("配置文件：{path}").format(path=config_path()))
+    print(_("数据目录：{path}").format(path=data_dir()))
+    print(_("缓存目录：{path}").format(path=cache_dir()))
     return 0
 
 
@@ -579,19 +591,19 @@ bindsym $mod+Shift+s exec catchlight region
 bindsym $mod+Shift+f exec catchlight full
 bindsym $mod+Shift+o exec catchlight ocr
 bindsym $mod+Shift+r exec catchlight record --gif""",
-    "gnome": """# GNOME：设置 -> 键盘 -> 自定义快捷键
+    "gnome": _("""# GNOME：设置 -> 键盘 -> 自定义快捷键
 名称: Catchlight 截图    命令: catchlight region    按键: Super+Shift+S
 名称: Catchlight 全屏    命令: catchlight full      按键: Super+Shift+F
 名称: Catchlight 取字    命令: catchlight ocr       按键: Super+Shift+O
-名称: Catchlight 录制    命令: catchlight record --gif   按键: Super+Shift+R""",
-    "kde": """# 系统设置 -> 快捷键 -> 自定义快捷键 -> 新建 -> 命令/URL
+名称: Catchlight 录制    命令: catchlight record --gif   按键: Super+Shift+R"""),
+    "kde": _("""# 系统设置 -> 快捷键 -> 自定义快捷键 -> 新建 -> 命令/URL
 动作: Catchlight 截图   触发器: Meta+Shift+S   命令: catchlight region
 动作: Catchlight 全屏   触发器: Meta+Shift+F   命令: catchlight full
 动作: Catchlight 取字   触发器: Meta+Shift+O   命令: catchlight ocr
-动作: Catchlight 录制   触发器: Meta+Shift+R   命令: catchlight record --gif""",
-    "wlroots": """# 其它 wlroots 合成器（同 sway 写法）
+动作: Catchlight 录制   触发器: Meta+Shift+R   命令: catchlight record --gif"""),
+    "wlroots": _("""# 其它 wlroots 合成器（同 sway 写法）
 bindsym $mod+Shift+s exec catchlight region
-bindsym $mod+Shift+f exec catchlight full""",
+bindsym $mod+Shift+f exec catchlight full"""),
 }
 
 
@@ -618,12 +630,12 @@ def command_hotkeys(args: argparse.Namespace, settings: Settings, store: Setting
         name = detect_compositor()
     template = HOTKEY_TEMPLATES.get(name)
     if template is None:
-        print("支持的合成器：{}".format(", ".join(sorted(HOTKEY_TEMPLATES))), file=sys.stderr)
+        print(_("支持的合成器：{}").format(", ".join(sorted(HOTKEY_TEMPLATES))), file=sys.stderr)
         return 2
-    print(f"# Catchlight 快捷键（{name}）")
+    print(_("# Catchlight 快捷键（{name}）").format(name=name))
     print(template)
     print("")
-    print(f"提示：{PROGRAM} 是唯一入口命令，所有子命令都支持 --help。")
+    print(_("提示：{PROGRAM} 是唯一入口命令，所有子命令都支持 --help。").format(PROGRAM=PROGRAM))
     return 0
 
 
@@ -633,19 +645,21 @@ def command_doctor(args: argparse.Namespace, settings: Settings, store: Settings
     def add(name: str, ok: bool, detail: str = "") -> None:
         checks.append((name, ok, detail))
 
-    add("Wayland 会话", bool(sys.platform.startswith("linux")), sys.platform)
+    add(_("Wayland 会话"), bool(sys.platform.startswith("linux")), sys.platform)
     import os
 
     display = os.environ.get("WAYLAND_DISPLAY", "")
-    add("WAYLAND_DISPLAY", bool(display), display or "未设置")
-    add("grim（截图）", shutil.which("grim") is not None, shutil.which("grim") or "未安装")
-    add("niri IPC（区域/指针）", shutil.which("niri") is not None, shutil.which("niri") or "未安装")
+    add("WAYLAND_DISPLAY", bool(display), display or _("未设置"))
+    add(_("grim（截图）"), shutil.which("grim") is not None, shutil.which("grim") or _("未安装"))
+    add(_("niri IPC（区域/指针）"), shutil.which("niri") is not None, shutil.which("niri") or _("未安装"))
     have_clipboard = shutil.which("wl-copy") is not None and shutil.which("wl-paste") is not None
-    add("wl-copy/wl-paste（剪贴板）", have_clipboard, shutil.which("wl-copy") or "未安装")
-    add("tesseract（OCR）", shutil.which("tesseract") is not None, shutil.which("tesseract") or "未安装")
+    add(_("wl-copy/wl-paste（剪贴板）"), have_clipboard, shutil.which("wl-copy") or _("未安装"))
+    add("tesseract（OCR）", shutil.which("tesseract") is not None, shutil.which("tesseract") or _("未安装"))
     backends = [name for name in ("wf-recorder", "gpu-screen-recorder") if shutil.which(name)]
-    add("录制后端（wf-recorder / gpu-screen-recorder）", bool(backends), ", ".join(backends) or "未安装")
-    add("ffmpeg（GIF 转换）", shutil.which("ffmpeg") is not None, shutil.which("ffmpeg") or "未安装")
+    add(
+        _("录制后端（wf-recorder / gpu-screen-recorder）"), bool(backends), ", ".join(backends) or _("未安装")
+    )
+    add(_("ffmpeg（GIF 转换）"), shutil.which("ffmpeg") is not None, shutil.which("ffmpeg") or _("未安装"))
 
     try:
         from .capture import portal
@@ -654,7 +668,7 @@ def command_doctor(args: argparse.Namespace, settings: Settings, store: Settings
         add(
             "ScreenCast portal（--backend portal）",
             version is not None,
-            f"version {version}" if version is not None else "不可用",
+            f"version {version}" if version is not None else _("不可用"),
         )
     except Exception as exc:  # pragma: no cover - depends on host
         add("ScreenCast portal（--backend portal）", False, str(exc))
@@ -675,12 +689,12 @@ def command_doctor(args: argparse.Namespace, settings: Settings, store: Settings
         from .ui.layer import library_path, preload_active
 
         lib = library_path()
-        add("gtk4-layer-shell", lib is not None, lib or "未安装（贴图/选区会退化为普通窗口）")
+        add("gtk4-layer-shell", lib is not None, lib or _("未安装（贴图/选区会退化为普通窗口）"))
         if preload_active():
-            detail = "已预加载"
+            detail = _("已预加载")
         else:
-            detail = "缺少库，功能会退化" if lib is None else "需要时会自动重新执行以预加载"
-        add("layer-shell 预加载", True, detail)
+            detail = _("缺少库，功能会退化") if lib is None else _("需要时会自动重新执行以预加载")
+        add(_("layer-shell 预加载"), True, detail)
     except Exception as exc:
         add("gtk4-layer-shell", False, str(exc))
 
@@ -689,18 +703,18 @@ def command_doctor(args: argparse.Namespace, settings: Settings, store: Settings
         langs = ocr.available_languages()
     except Exception:
         langs = []
-    add("OCR 语言包", bool(langs), ", ".join(langs) if langs else "未安装（tesseract-data-eng 等）")
+    add(_("OCR 语言包"), bool(langs), ", ".join(langs) if langs else _("未安装（tesseract-data-eng 等）"))
 
     directory = Path(settings.capture.save_dir).expanduser()
     try:
         ensure_dirs()
         directory.mkdir(parents=True, exist_ok=True)
         writable = directory.is_dir()
-        add("保存目录可写", writable, str(directory))
+        add(_("保存目录可写"), writable, str(directory))
     except OSError as exc:
-        add("保存目录可写", False, f"{directory}（{exc}）")
+        add(_("保存目录可写"), False, f"{directory}（{exc}）")
 
-    width = max(len(name) for name, _, _ in checks)
+    width = max(len(name) for name, _unused, _unused2 in checks)
     failures = 0
     for name, ok, detail in checks:
         mark = "[ok]  " if ok else "[!!]  "
@@ -709,9 +723,9 @@ def command_doctor(args: argparse.Namespace, settings: Settings, store: Settings
         print(f"{mark}{name:<{width}} {detail}")
     print("")
     if failures:
-        print(f"{failures} 项需要处理；缺少的可选依赖只影响对应功能。")
+        print(_("{failures} 项需要处理；缺少的可选依赖只影响对应功能。").format(failures=failures))
     else:
-        print("环境看起来一切正常。")
+        print(_("环境看起来一切正常。"))
     return 0
 
 
@@ -751,141 +765,143 @@ def build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--version", action="version", version="%(prog)s " + __version__)
-    subparsers = parser.add_subparsers(dest="command", metavar="命令")
+    subparsers = parser.add_subparsers(dest="command", metavar=_("命令"))
 
     def add_capture_options(sub: argparse.ArgumentParser) -> None:
-        sub.add_argument("--edit", dest="force_editor", action="store_true", help="截完立刻打开编辑器")
-        sub.add_argument("--no-editor", action="store_true", help="截完不打开编辑器")
-        sub.add_argument("--pin", action="store_true", help="截完把图片钉在屏幕上")
-        sub.add_argument("--position", metavar="X,Y", help="贴图初始位置（配合 --pin）")
-        sub.add_argument("--scale", type=float, default=1.0, metavar="N", help="贴图初始缩放（配合 --pin）")
-        sub.add_argument("--dir", metavar="PATH", help="本次保存目录")
-        sub.add_argument("--format", choices=["png", "jpg", "jpeg", "webp"], help="本次保存格式")
-        sub.add_argument("--no-copy", action="store_true", help="本次不复制到剪贴板")
-        sub.add_argument("--delay", type=float, default=0.0, metavar="SEC", help="截图前延时")
-        sub.add_argument("--rect", metavar="X,Y,W,H", help="直接截取指定区域（不弹选区）")
+        sub.add_argument("--edit", dest="force_editor", action="store_true", help=_("截完立刻打开编辑器"))
+        sub.add_argument("--no-editor", action="store_true", help=_("截完不打开编辑器"))
+        sub.add_argument("--pin", action="store_true", help=_("截完把图片钉在屏幕上"))
+        sub.add_argument("--position", metavar="X,Y", help=_("贴图初始位置（配合 --pin）"))
+        sub.add_argument(
+            "--scale", type=float, default=1.0, metavar="N", help=_("贴图初始缩放（配合 --pin）")
+        )
+        sub.add_argument("--dir", metavar="PATH", help=_("本次保存目录"))
+        sub.add_argument("--format", choices=["png", "jpg", "jpeg", "webp"], help=_("本次保存格式"))
+        sub.add_argument("--no-copy", action="store_true", help=_("本次不复制到剪贴板"))
+        sub.add_argument("--delay", type=float, default=0.0, metavar="SEC", help=_("截图前延时"))
+        sub.add_argument("--rect", metavar="X,Y,W,H", help=_("直接截取指定区域（不弹选区）"))
         sub.add_argument(
             "--backend",
             choices=["auto", "grim", "portal"],
             default="auto",
-            help="截图后端：auto 优先 grim，没有 grim 时用 ScreenCast portal",
+            help=_("截图后端：auto 优先 grim，没有 grim 时用 ScreenCast portal"),
         )
 
-    region = subparsers.add_parser("region", help="框选截图（默认命令）")
+    region = subparsers.add_parser("region", help=_("框选截图（默认命令）"))
     add_capture_options(region)
 
-    full = subparsers.add_parser("full", help="截取所有输出")
+    full = subparsers.add_parser("full", help=_("截取所有输出"))
     add_capture_options(full)
 
-    capture = subparsers.add_parser("capture", help="同 region")
+    capture = subparsers.add_parser("capture", help=_("同 region"))
     add_capture_options(capture)
 
-    edit = subparsers.add_parser("edit", help="打开编辑器编辑已有图片")
-    edit.add_argument("file", help="图片路径，- 表示从标准输入读取")
+    edit = subparsers.add_parser("edit", help=_("打开编辑器编辑已有图片"))
+    edit.add_argument("file", help=_("图片路径，- 表示从标准输入读取"))
 
-    pin = subparsers.add_parser("pin", help="把图片钉在屏幕上")
-    pin.add_argument("file", nargs="?", help="图片路径；省略时先框选截图")
-    pin.add_argument("--position", metavar="X,Y", default="140,140", help="初始位置（默认 140,140）")
-    pin.add_argument("--scale", type=float, default=1.0, metavar="N", help="初始缩放（默认 1.0）")
+    pin = subparsers.add_parser("pin", help=_("把图片钉在屏幕上"))
+    pin.add_argument("file", nargs="?", help=_("图片路径；省略时先框选截图"))
+    pin.add_argument("--position", metavar="X,Y", default="140,140", help=_("初始位置（默认 140,140）"))
+    pin.add_argument("--scale", type=float, default=1.0, metavar="N", help=_("初始缩放（默认 1.0）"))
 
-    ocr_parser = subparsers.add_parser("ocr", help="识别图片或框选区域的文字")
-    ocr_parser.add_argument("file", nargs="?", help="图片路径；省略时先框选截图")
-    ocr_parser.add_argument("--lang", help="语言，例如 eng+chi_sim")
-    ocr_parser.add_argument("--psm", type=int, default=6, help="tesseract 页面分割模式（默认 6）")
-    ocr_parser.add_argument("--copy", action="store_true", help="把识别结果复制到剪贴板")
-    ocr_parser.add_argument("--json", action="store_true", help="输出带词框的 JSON")
+    ocr_parser = subparsers.add_parser("ocr", help=_("识别图片或框选区域的文字"))
+    ocr_parser.add_argument("file", nargs="?", help=_("图片路径；省略时先框选截图"))
+    ocr_parser.add_argument("--lang", help=_("语言，例如 eng+chi_sim"))
+    ocr_parser.add_argument("--psm", type=int, default=6, help=_("tesseract 页面分割模式（默认 6）"))
+    ocr_parser.add_argument("--copy", action="store_true", help=_("把识别结果复制到剪贴板"))
+    ocr_parser.add_argument("--json", action="store_true", help=_("输出带词框的 JSON"))
 
-    scroll_parser = subparsers.add_parser("scroll", help="滚动截图：连续截图并自动拼接成长图")
-    scroll_parser.add_argument("--steps", type=int, default=5, metavar="N", help="截图帧数（默认 5）")
+    scroll_parser = subparsers.add_parser("scroll", help=_("滚动截图：连续截图并自动拼接成长图"))
+    scroll_parser.add_argument("--steps", type=int, default=5, metavar="N", help=_("截图帧数（默认 5）"))
     scroll_parser.add_argument(
         "--advance",
         choices=["wtype", "ydotool"],
-        help="自动滚动后端（默认自动选择）",
+        help=_("自动滚动后端（默认自动选择）"),
     )
-    scroll_parser.add_argument("--manual", action="store_true", help="自己滚动，每滚一屏按回车继续")
+    scroll_parser.add_argument("--manual", action="store_true", help=_("自己滚动，每滚一屏按回车继续"))
     scroll_parser.add_argument(
         "--min-overlap",
         type=int,
         default=scroll.MIN_OVERLAP,
         metavar="N",
-        help="最小重叠行数（默认 24）",
+        help=_("最小重叠行数（默认 24）"),
     )
     scroll_parser.add_argument(
         "--settle",
         type=float,
         default=0.35,
         metavar="SEC",
-        help="每滚一屏后等待画面稳定的秒数（默认 0.35）",
+        help=_("每滚一屏后等待画面稳定的秒数（默认 0.35）"),
     )
-    scroll_parser.add_argument("--rect", metavar="X,Y,W,H", help="直接截取指定区域（不弹选区）")
-    scroll_parser.add_argument("--edit", dest="force_editor", action="store_true", help="拼接完打开编辑器")
-    scroll_parser.add_argument("--no-editor", action="store_true", help="拼接完不打开编辑器")
-    scroll_parser.add_argument("--dir", metavar="PATH", help="本次保存目录")
+    scroll_parser.add_argument("--rect", metavar="X,Y,W,H", help=_("直接截取指定区域（不弹选区）"))
+    scroll_parser.add_argument("--edit", dest="force_editor", action="store_true", help=_("拼接完打开编辑器"))
+    scroll_parser.add_argument("--no-editor", action="store_true", help=_("拼接完不打开编辑器"))
+    scroll_parser.add_argument("--dir", metavar="PATH", help=_("本次保存目录"))
     scroll_parser.add_argument(
         "--format",
         choices=["png", "jpg", "jpeg", "webp"],
-        help="本次保存格式",
+        help=_("本次保存格式"),
     )
-    scroll_parser.add_argument("--no-copy", action="store_true", help="本次不复制到剪贴板")
-    scroll_parser.add_argument("--delay", type=float, default=0.0, metavar="SEC", help="开始前延时")
-    scroll_parser.add_argument("--output", metavar="PATH", help="输出文件路径")
+    scroll_parser.add_argument("--no-copy", action="store_true", help=_("本次不复制到剪贴板"))
+    scroll_parser.add_argument("--delay", type=float, default=0.0, metavar="SEC", help=_("开始前延时"))
+    scroll_parser.add_argument("--output", metavar="PATH", help=_("输出文件路径"))
 
-    record = subparsers.add_parser("record", help="录制屏幕（可转 GIF）")
-    record.add_argument("--full", action="store_true", help="录制整个桌面，不框选")
-    record.add_argument("--fps", type=int, help="帧率")
-    record.add_argument("--audio", action="store_true", help="录制系统音频（需要 wf-recorder）")
-    record.add_argument("--gif", action="store_true", help="录制结束后转成 GIF")
-    record.add_argument("--gif-fps", type=int, help="GIF 帧率")
-    record.add_argument("--gif-width", type=int, help="GIF 宽度")
-    record.add_argument("--duration", type=float, metavar="SEC", help="最长录制秒数")
-    record.add_argument("--backend", choices=["wf-recorder", "gpu-screen-recorder"], help="指定录制后端")
-    record.add_argument("--output", metavar="PATH", help="输出文件路径")
+    record = subparsers.add_parser("record", help=_("录制屏幕（可转 GIF）"))
+    record.add_argument("--full", action="store_true", help=_("录制整个桌面，不框选"))
+    record.add_argument("--fps", type=int, help=_("帧率"))
+    record.add_argument("--audio", action="store_true", help=_("录制系统音频（需要 wf-recorder）"))
+    record.add_argument("--gif", action="store_true", help=_("录制结束后转成 GIF"))
+    record.add_argument("--gif-fps", type=int, help=_("GIF 帧率"))
+    record.add_argument("--gif-width", type=int, help=_("GIF 宽度"))
+    record.add_argument("--duration", type=float, metavar="SEC", help=_("最长录制秒数"))
+    record.add_argument("--backend", choices=["wf-recorder", "gpu-screen-recorder"], help=_("指定录制后端"))
+    record.add_argument("--output", metavar="PATH", help=_("输出文件路径"))
 
-    codes = subparsers.add_parser("codes", help="识别图片或框选区域的二维码/条码")
-    codes.add_argument("file", nargs="?", help="图片路径；省略时先框选截图")
+    codes = subparsers.add_parser("codes", help=_("识别图片或框选区域的二维码/条码"))
+    codes.add_argument("file", nargs="?", help=_("图片路径；省略时先框选截图"))
     codes.add_argument(
         "--command",
         dest="decoder",
         default=barcode.DEFAULT_COMMAND,
         metavar="CMD",
-        help="解码命令（默认 zbarimg）",
+        help=_("解码命令（默认 zbarimg）"),
     )
-    codes.add_argument("--copy", action="store_true", help="把识别结果复制到剪贴板")
-    codes.add_argument("--json", action="store_true", help="以 JSON 输出")
+    codes.add_argument("--copy", action="store_true", help=_("把识别结果复制到剪贴板"))
+    codes.add_argument("--json", action="store_true", help=_("以 JSON 输出"))
 
-    redact_parser = subparsers.add_parser("redact", help="找出并遮住图片中的敏感文字")
-    redact_parser.add_argument("file", nargs="?", help="图片路径；省略时先框选截图")
-    redact_parser.add_argument("--lang", help="OCR 语言，默认取设置")
-    redact_parser.add_argument("--psm", type=int, default=6, help="tesseract 页面分割模式（默认 6）")
-    redact_parser.add_argument("--kinds", metavar="LIST", help="只查找这些类型，逗号分隔")
+    redact_parser = subparsers.add_parser("redact", help=_("找出并遮住图片中的敏感文字"))
+    redact_parser.add_argument("file", nargs="?", help=_("图片路径；省略时先框选截图"))
+    redact_parser.add_argument("--lang", help=_("OCR 语言，默认取设置"))
+    redact_parser.add_argument("--psm", type=int, default=6, help=_("tesseract 页面分割模式（默认 6）"))
+    redact_parser.add_argument("--kinds", metavar="LIST", help=_("只查找这些类型，逗号分隔"))
     redact_parser.add_argument(
-        "--mode", choices=["solid", "mosaic", "blur"], default="solid", help="遮住方式"
+        "--mode", choices=["solid", "mosaic", "blur"], default="solid", help=_("遮住方式")
     )
-    redact_parser.add_argument("--padding", type=int, default=4, help="每块外扩像素（默认 4）")
-    redact_parser.add_argument("--block", type=int, help="马赛克块大小")
-    redact_parser.add_argument("--edit", action="store_true", help="在编辑器里打开结果")
-    redact_parser.add_argument("--output", metavar="PATH", help="输出文件路径")
-    redact_parser.add_argument("--copy", action="store_true", help="把脱敏后的图片复制到剪贴板")
-    redact_parser.add_argument("--json", action="store_true", help="以 JSON 输出命中的内容")
+    redact_parser.add_argument("--padding", type=int, default=4, help=_("每块外扩像素（默认 4）"))
+    redact_parser.add_argument("--block", type=int, help=_("马赛克块大小"))
+    redact_parser.add_argument("--edit", action="store_true", help=_("在编辑器里打开结果"))
+    redact_parser.add_argument("--output", metavar="PATH", help=_("输出文件路径"))
+    redact_parser.add_argument("--copy", action="store_true", help=_("把脱敏后的图片复制到剪贴板"))
+    redact_parser.add_argument("--json", action="store_true", help=_("以 JSON 输出命中的内容"))
 
-    subparsers.add_parser("tray", help="在系统托盘里驻留一个图标")
+    subparsers.add_parser("tray", help=_("在系统托盘里驻留一个图标"))
 
-    history = subparsers.add_parser("history", help="查看截图历史")
-    history.add_argument("--limit", type=int, default=20, help="显示条数（默认 20）")
-    history.add_argument("--json", action="store_true", help="以 JSON 输出")
-    history.add_argument("--clear", action="store_true", help="清空历史记录")
-    history.add_argument("--gui", action="store_true", help="打开可浏览的历史窗口")
+    history = subparsers.add_parser("history", help=_("查看截图历史"))
+    history.add_argument("--limit", type=int, default=20, help=_("显示条数（默认 20）"))
+    history.add_argument("--json", action="store_true", help=_("以 JSON 输出"))
+    history.add_argument("--clear", action="store_true", help=_("清空历史记录"))
+    history.add_argument("--gui", action="store_true", help=_("打开可浏览的历史窗口"))
 
-    settings = subparsers.add_parser("settings", help="查看或修改设置")
-    settings.add_argument("--show", action="store_true", help="打印全部设置（JSON）")
-    settings.add_argument("--set", action="append", metavar="段.字段=值", help="修改一项设置，可重复")
-    settings.add_argument("--reset", action="store_true", help="恢复默认设置")
+    settings = subparsers.add_parser("settings", help=_("查看或修改设置"))
+    settings.add_argument("--show", action="store_true", help=_("打印全部设置（JSON）"))
+    settings.add_argument("--set", action="append", metavar=_("段.字段=值"), help=_("修改一项设置，可重复"))
+    settings.add_argument("--reset", action="store_true", help=_("恢复默认设置"))
 
-    hotkeys = subparsers.add_parser("hotkeys", help="生成桌面快捷键配置片段")
-    hotkeys.add_argument("--compositor", choices=[*sorted(HOTKEY_TEMPLATES), "auto"], help="指定合成器")
+    hotkeys = subparsers.add_parser("hotkeys", help=_("生成桌面快捷键配置片段"))
+    hotkeys.add_argument("--compositor", choices=[*sorted(HOTKEY_TEMPLATES), "auto"], help=_("指定合成器"))
 
-    subparsers.add_parser("doctor", help="检查运行环境")
-    subparsers.add_parser("version", help="显示版本")
+    subparsers.add_parser("doctor", help=_("检查运行环境"))
+    subparsers.add_parser("version", help=_("显示版本"))
 
     return parser
 
@@ -897,7 +913,7 @@ def main(argv: list[str] | None = None) -> int:
     args.command = command
     handler = COMMANDS.get(command)
     if handler is None:
-        parser.error(f"未知命令：{command}")
+        parser.error(_("未知命令：{command}").format(command=command))
 
     store = load_store()
     settings = store.load()
@@ -915,7 +931,7 @@ def main(argv: list[str] | None = None) -> int:
         from .capture.screencopy import CaptureError
 
         if isinstance(exc, (CaptureError, ocr.OcrError)):
-            print(f"出错：{exc}", file=sys.stderr)
+            print(_("出错：{exc}").format(exc=exc), file=sys.stderr)
             return 2
         raise
 

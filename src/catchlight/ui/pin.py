@@ -13,6 +13,7 @@ from gi.repository import Gdk, Gtk
 from PIL import Image
 
 from ..capture.base import Geometry
+from ..i18n import _
 from ..snap import centre_position, snap_position
 from .layer import init_window, layer_shell
 from .pixbuf import to_pixbuf
@@ -72,7 +73,7 @@ class PinWindow(Gtk.ApplicationWindow):
 
         right = Gtk.GestureClick()
         right.set_button(3)
-        right.connect("pressed", lambda *_: self.close())
+        right.connect("pressed", lambda *_args: self.close())
         self.area.add_controller(right)
 
         scroll = Gtk.EventControllerScroll()
@@ -85,8 +86,8 @@ class PinWindow(Gtk.ApplicationWindow):
         self.add_controller(keys)
 
         motion = Gtk.EventControllerMotion()
-        motion.connect("enter", lambda *_: self._show_toolbar(True))
-        motion.connect("leave", lambda *_: self._show_toolbar(False))
+        motion.connect("enter", lambda *_args: self._show_toolbar(True))
+        motion.connect("leave", lambda *_args: self._show_toolbar(False))
         self.area.add_controller(motion)
 
         self.connect("close-request", self._on_close_request)
@@ -108,36 +109,36 @@ class PinWindow(Gtk.ApplicationWindow):
         toolbar.set_valign(Gtk.Align.END)
         toolbar.set_margin_bottom(8)
         for label, callback, tip in (
-            ("1:1", self._reset_zoom, "恢复原始大小"),
-            ("复制", self._copy, "复制到剪贴板"),
-            ("保存", self._save, "保存为文件"),
-            ("贴图", self._pin_again, "再贴一张"),
-            ("关闭", lambda: self.close(), "关闭 (Esc)"),
+            ("1:1", self._reset_zoom, _("恢复原始大小")),
+            (_("复制"), self._copy, _("复制到剪贴板")),
+            (_("保存"), self._save, _("保存为文件")),
+            (_("贴图"), self._pin_again, _("再贴一张")),
+            (_("关闭"), lambda: self.close(), _("关闭 (Esc)")),
         ):
             button = Gtk.Button(label=label)
             button.connect("clicked", lambda _b, cb=callback: cb())
             button.set_tooltip_text(tip)
             toolbar.append(button)
 
-        centre = Gtk.Button(label="居中")
-        centre.set_tooltip_text("把贴图移到屏幕中央")
+        centre = Gtk.Button(label=_("居中"))
+        centre.set_tooltip_text(_("把贴图移到屏幕中央"))
         centre.connect("clicked", lambda _b: self._centre())
         toolbar.append(centre)
 
-        self.link_button = Gtk.ToggleButton(label="联动")
-        self.link_button.set_tooltip_text("与其他开启联动的贴图一起移动和缩放")
+        self.link_button = Gtk.ToggleButton(label=_("联动"))
+        self.link_button.set_tooltip_text(_("与其他开启联动的贴图一起移动和缩放"))
         self.link_button.connect("toggled", self._on_link_toggled)
         toolbar.append(self.link_button)
 
-        self.click_button = Gtk.ToggleButton(label="穿透")
-        self.click_button.set_tooltip_text("只让下方工具条响应鼠标，图片区域点击穿透")
+        self.click_button = Gtk.ToggleButton(label=_("穿透"))
+        self.click_button.set_tooltip_text(_("只让下方工具条响应鼠标，图片区域点击穿透"))
         self.click_button.connect("toggled", self._on_click_through_toggled)
         toolbar.append(self.click_button)
 
         self.opacity_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0.2, 1.0, 0.05)
         self.opacity_scale.set_value(1.0)
         self.opacity_scale.set_size_request(104, -1)
-        self.opacity_scale.set_tooltip_text("不透明度")
+        self.opacity_scale.set_tooltip_text(_("不透明度"))
         self.opacity_scale.connect("value-changed", self._on_opacity_changed)
         toolbar.append(self.opacity_scale)
 

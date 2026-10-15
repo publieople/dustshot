@@ -73,6 +73,9 @@ output, starts a recording, or opens the capture history.*
 - **Tray icon**: `catchlight tray` publishes a StatusNotifierItem icon whose dbusmenu captures a
   region or the whole output, starts a recording, opens the capture history, or quits; every row
   runs the matching CLI command in its own process.
+- **Translations**: interface text goes through gettext; the English catalogue in `po/`
+  compiles into `src/catchlight/locale/` and is picked up from the session language, and
+  `CATCHLIGHT_LANG=en` forces one for a single run.
 - **Extras**: a browsable capture history window (`catchlight history --gui`), `.cln`
   editor projects, hotkey templates, `catchlight doctor`.
 
@@ -214,12 +217,33 @@ Settings live in `~/.config/catchlight/config.json` and are written by `catchlig
 and `recording`; capture history is kept in `~/.local/share/catchlight/history.json` and
 screenshots default to `~/Pictures/Screenshots`.
 
+## Translations
+
+Interface text is wrapped in `_()` and resolved through gettext (domain `catchlight`). The
+catalogues live in `po/` and are compiled into
+`src/catchlight/locale/<language>/LC_MESSAGES/catchlight.mo`, which is what ships in the
+package; without a catalogue every lookup returns the original Chinese string.
+
+```sh
+CATCHLIGHT_LANG=en catchlight full      # force a language for one run
+python3 -m catchlight.i18n available    # list the compiled catalogues
+python3 -m catchlight.i18n compile      # rebuild every .mo from po/*.po
+
+# refresh the template after adding or changing strings
+xgettext --language=Python --keyword=_ --keyword=ngettext:1,2 --from-code=UTF-8 \
+    --package-name=catchlight --add-comments=TRANSLATORS \
+    -o po/catchlight.pot $(find src -name '*.py' | sort)
+```
+
+`CATCHLIGHT_LANG` (a `:` or `,` separated list, highest priority first) overrides the session
+language, and `CATCHLIGHT_LOCALEDIR` points the lookup at another directory.
+
 ## Development
 
 ```fish
 python3 -m venv .venv; source .venv/bin/activate.fish
 pip install -e '.[dev]'
-python -m pytest        # 73 tests, no display required
+python -m pytest        # no display required
 ruff check src tests
 ruff format --check src tests
 ```

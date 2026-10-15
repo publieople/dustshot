@@ -36,7 +36,7 @@ def _fc_match(spec: str) -> str | None:
     text = result.stdout.decode("utf-8", "replace").strip()
     if not text:
         return None
-    path, _, index = text.rpartition(":")
+    path, _sep, index = text.rpartition(":")
     if not path or not os.path.isfile(path):
         return None
     return f"{path}|{index or 0}"
@@ -47,7 +47,7 @@ def resolve(spec_or_families) -> tuple[str, int] | None:
     for spec in specs:
         found = _fc_match(spec)
         if found:
-            path, _, index = found.partition("|")
+            path, _sep, index = found.partition("|")
             try:
                 return (path, int(index))
             except ValueError:

@@ -23,6 +23,7 @@ from typing import Any
 
 from PIL import Image
 
+from ..i18n import _
 from .base import Frame, Geometry, OutputInfo
 from .screencopy import CaptureError
 
@@ -231,7 +232,7 @@ def _typed_options(options: dict[str, Any], GLib: Any) -> dict[str, Any]:
         elif isinstance(value, str):
             typed[key] = GLib.Variant("s", value)
         else:  # pragma: no cover - defensive
-            raise PortalError(f"portal 选项值类型不支持：{key}={value!r}")
+            raise PortalError(_("portal 选项值类型不支持：{key}={value!r}").format(key=key, value=value))
     return typed
 
 
@@ -241,26 +242,26 @@ def backend_choice(requested: str = "auto", *, grim: bool, portal: bool) -> str:
     wanted = (requested or "auto").lower()
     if wanted == "grim":
         if not grim:
-            raise CaptureError("grim 不可用：请安装 grim，或改用 --backend portal")
+            raise CaptureError(_("grim 不可用：请安装 grim，或改用 --backend portal"))
         return "grim"
     if wanted == "portal":
         if not portal:
-            raise CaptureError("ScreenCast portal 不可用：请确认 xdg-desktop-portal 及其后端正在运行")
+            raise CaptureError(_("ScreenCast portal 不可用：请确认 xdg-desktop-portal 及其后端正在运行"))
         return "portal"
     if wanted != "auto":
-        raise CaptureError(f"未知截图后端：{requested}")
+        raise CaptureError(_("未知截图后端：{requested}").format(requested=requested))
     if grim:
         return "grim"
     if portal:
         return "portal"
-    raise CaptureError("没有可用的截图后端：安装 grim，或启动 xdg-desktop-portal")
+    raise CaptureError(_("没有可用的截图后端：安装 grim，或启动 xdg-desktop-portal"))
 
 
 def stitch_frames(frames: list[Frame]) -> Image.Image:
     """Stitch portal frames onto one canvas using their logical positions."""
 
     if not frames:
-        raise PortalError("portal 没有返回任何画面")
+        raise PortalError(_("portal 没有返回任何画面"))
     if len(frames) == 1:
         return frames[0].image
     union = frames[0].output.logical
@@ -286,7 +287,7 @@ def _gi() -> tuple[Any, Any]:
         gi.require_version("GLib", "2.0")
         from gi.repository import Gio, GLib
     except Exception as exc:  # pragma: no cover - depends on host
-        raise PortalError(f"缺少 PyGObject，无法使用 ScreenCast portal：{exc}") from exc
+        raise PortalError(_("缺少 PyGObject，无法使用 ScreenCast portal：{exc}").format(exc=exc)) from exc
     return Gio, GLib
 
 
@@ -294,7 +295,7 @@ def _connection(Gio: Any) -> Any:
     try:
         return Gio.bus_get_sync(Gio.BusType.SESSION, None)
     except Exception as exc:  # pragma: no cover - depends on host
-        raise PortalError(f"连接会话总线失败：{exc}") from exc
+        raise PortalError(_("连接会话总线失败：{exc}").format(exc=exc)) from exc
 
 
 def portal_version(timeout: float = PROBE_TIMEOUT) -> int | None:
@@ -373,7 +374,7 @@ class PortalSession:
                 problems.append(str(exc))
             finally:
                 grabber.close()
-        raise PortalError("无法读取 portal 画面：" + "；".join(problems))
+        raise PortalError(_("无法读取 portal 画面：") + "；".join(problems))
 
     def frames(self, timeout: float = FRAME_TIMEOUT) -> list[Frame]:
         """Grab one frame per stream, keeping the portal's geometry."""
@@ -469,19 +470,21 @@ def _request(
     except PortalError:
         raise
     except Exception as exc:
-        raise PortalError(f"portal {method} 调用失败：{exc}") from exc
+        raise PortalError(_("portal {method} 调用失败：{exc}").format(method=method, exc=exc)) from exc
     finally:
         if not state.get("expired"):
             GLib.source_remove(source)
         connection.signal_unsubscribe(subscription)
 
     if not state["answered"]:
-        raise PortalError(f"portal {method} 在 {timeout:.0f} 秒内没有回应")
+        raise PortalError(
+            _("portal {method} 在 {timeout:.0f} 秒内没有回应").format(method=method, timeout=timeout)
+        )
     code = int(state["code"])
     if code == RESPONSE_CANCELLED:
-        raise PortalError("屏幕共享被取消")
+        raise PortalError(_("屏幕共享被取消"))
     if code != RESPONSE_SUCCESS:
-        raise PortalError(f"portal {method} 返回错误码 {code}")
+        raise PortalError(_("portal {method} 返回错误码 {code}").format(method=method, code=code))
     return state["results"]
 
 
@@ -514,7 +517,7 @@ def open_session(
     )
     handle = str(created.get("session_handle", ""))
     if not handle:
-        raise PortalError("portal 没有返回 session_handle")
+        raise PortalError(_("portal 没有返回 session_handle"))
 
     select_token = new_token("select")
     select_args = _typed_options(
@@ -562,7 +565,7 @@ def open_session(
                 int(PROBE_TIMEOUT * 1000),
                 None,
             )
-        raise PortalError("portal 没有返回可用的画面流")
+        raise PortalError(_("portal 没有返回可用的画面流"))
     return PortalSession(
         connection,
         GLib,
@@ -588,11 +591,11 @@ def _open_pipewire_remote(Gio: Any, GLib: Any, connection: Any, handle: str, tim
             None,
         )
     except Exception as exc:
-        raise PortalError(f"portal OpenPipeWireRemote 失败：{exc}") from exc
+        raise PortalError(_("portal OpenPipeWireRemote 失败：{exc}").format(exc=exc)) from exc
     index = int(reply.unpack()[0])
     fds = list(out_fds.steal_fds())
     if not fds:
-        raise PortalError("portal 没有返回 PipeWire 文件描述符")
+        raise PortalError(_("portal 没有返回 PipeWire 文件描述符"))
     return int(fds[index if 0 <= index < len(fds) else 0])
 
 
@@ -610,7 +613,9 @@ class _Grabber:
             gi.require_version("GstApp", "1.0")
             from gi.repository import Gst, GstApp
         except Exception as exc:  # pragma: no cover - depends on host
-            raise PortalError(f"缺少 GStreamer Python 绑定，无法读取 portal 画面：{exc}") from exc
+            raise PortalError(
+                _("缺少 GStreamer Python 绑定，无法读取 portal 画面：{exc}").format(exc=exc)
+            ) from exc
 
         Gst.init(None)
         self.Gst = Gst
@@ -619,12 +624,12 @@ class _Grabber:
         try:
             self.pipeline = Gst.parse_launch(description)
         except Exception as exc:
-            raise PortalError(f"无法创建 GStreamer 管线：{exc}") from exc
+            raise PortalError(_("无法创建 GStreamer 管线：{exc}").format(exc=exc)) from exc
         self.sink = self.pipeline.get_by_name("catchlight-sink")
         if self.sink is None:
-            raise PortalError("GStreamer 管线缺少 appsink")
+            raise PortalError(_("GStreamer 管线缺少 appsink"))
         if not hasattr(self.sink, "try_pull_sample"):
-            raise PortalError("GstApp 绑定不可用：无法从 appsink 取样")
+            raise PortalError(_("GstApp 绑定不可用：无法从 appsink 取样"))
 
     def grab(self, timeout: float = FRAME_TIMEOUT) -> Image.Image:
         self.pipeline.set_state(self.Gst.State.PLAYING)
@@ -639,11 +644,19 @@ class _Grabber:
             if message is not None:
                 if message.type == self.Gst.MessageType.ERROR:
                     error, _debug = message.parse_error()
-                    raise PortalError(f"portal 画面管线出错：{error.message}{_detail(warning)}")
+                    raise PortalError(
+                        _("portal 画面管线出错：{message}{detail}").format(
+                            message=error.message, detail=_detail(warning)
+                        )
+                    )
                 warn, _debug = message.parse_warning()
                 warning = warn.message
             if time.monotonic() >= deadline:
-                raise PortalError(f"portal 画面在 {timeout:.0f} 秒内没有到达{_detail(warning)}")
+                raise PortalError(
+                    _("portal 画面在 {timeout:.0f} 秒内没有到达{detail}").format(
+                        timeout=timeout, detail=_detail(warning)
+                    )
+                )
 
     def close(self) -> None:
         with contextlib.suppress(Exception):
@@ -657,7 +670,7 @@ def _sample_to_image(sample: Any) -> Image.Image:
     buffer = sample.get_buffer()
     size = int(buffer.get_size())
     if width <= 0 or height <= 0 or size <= 0:
-        raise PortalError("portal 返回了空画面")
+        raise PortalError(_("portal 返回了空画面"))
     stride = size // height
     data = bytes(buffer.extract_dup(0, size))
     image = Image.frombytes("RGB", (max(1, stride // 3), height), data)
@@ -691,7 +704,7 @@ def capture_all(*, timeout: float = PORTAL_TIMEOUT) -> Image.Image:
     try:
         if len(session.streams) > 1 and any(stream.position is None for stream in session.streams):
             raise PortalError(
-                "portal 没有报告显示器位置，无法拼接全部输出；请只共享一个显示器，或用 --rect 指定区域"
+                _("portal 没有报告显示器位置，无法拼接全部输出；请只共享一个显示器，或用 --rect 指定区域")
             )
         frames = session.frames()
     finally:
@@ -707,7 +720,7 @@ def capture_region(region: Geometry, *, timeout: float = PORTAL_TIMEOUT) -> Imag
     for frame in grab_frames(timeout=timeout, multiple=True):
         if frame.output.logical.intersects(region):
             return frame.crop_logical(region)
-    raise PortalError("选区不在 portal 共享的画面里")
+    raise PortalError(_("选区不在 portal 共享的画面里"))
 
 
 def capture_output(*, timeout: float = PORTAL_TIMEOUT) -> Frame:

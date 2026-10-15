@@ -24,6 +24,7 @@ gi.require_version("GLib", "2.0")
 from gi.repository import Gio, GLib
 
 from .. import tray as model
+from ..i18n import _
 
 
 class TrayError(RuntimeError):
@@ -153,7 +154,7 @@ class TrayItem:
         self._registrations: list[int] = []
         self._connection = Gio.bus_get_sync(Gio.BusType.SESSION, None)
         if self._connection is None:
-            raise TrayError("连不上会话总线（DBUS_SESSION_BUS_ADDRESS 没有设置？）")
+            raise TrayError(_("连不上会话总线（DBUS_SESSION_BUS_ADDRESS 没有设置？）"))
         try:
             self._own_name()
             self._register_objects()
@@ -175,7 +176,7 @@ class TrayItem:
             None,
         )
         if reply.unpack()[0] != NAME_RESULT_PRIMARY_OWNER:
-            raise TrayError(f"总线名 {self.bus_name} 已被占用")
+            raise TrayError(_("总线名 {bus_name} 已被占用").format(bus_name=self.bus_name))
 
     def _register_objects(self) -> None:
         item = Gio.DBusNodeInfo.new_for_xml(SNI_XML).interfaces[0]
@@ -205,7 +206,11 @@ class TrayItem:
                 None,
             )
         except GLib.Error as exc:
-            raise TrayError(f"会话总线上没有托盘宿主（{model.WATCHER_NAME}）：{exc.message}") from exc
+            raise TrayError(
+                _("会话总线上没有托盘宿主（{WATCHER_NAME}）：{message}").format(
+                    WATCHER_NAME=model.WATCHER_NAME, message=exc.message
+                )
+            ) from exc
 
     # ----------------------------------------------------------------- item
 
@@ -378,12 +383,14 @@ def run_tray(settings: Any = None) -> int:
     try:
         item = TrayItem(settings, on_quit=loop.quit)
     except TrayError as exc:
-        print(f"托盘图标不可用：{exc}", file=sys.stderr)
+        print(_("托盘图标不可用：{exc}").format(exc=exc), file=sys.stderr)
         return 1
     for number in (signal.SIGINT, signal.SIGTERM):
         _signal_source()(GLib.PRIORITY_DEFAULT, number, _stop, loop)
     print(
-        f"托盘图标已注册：{item.bus_name}（在菜单里选「退出托盘」，或按 Ctrl+C 结束）",
+        _("托盘图标已注册：{bus_name}（在菜单里选「退出托盘」，或按 Ctrl+C 结束）").format(
+            bus_name=item.bus_name
+        ),
         file=sys.stderr,
     )
     try:

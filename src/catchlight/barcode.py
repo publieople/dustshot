@@ -11,6 +11,8 @@ from typing import Any
 
 from PIL import Image
 
+from .i18n import _
+
 DEFAULT_COMMAND = "zbarimg"
 NOTHING_FOUND = 4
 
@@ -68,16 +70,18 @@ def decode_file(
 
     binary = command_path(command)
     if binary is None:
-        raise BarcodeError("未找到 zbarimg，请安装 zbar")
+        raise BarcodeError(_("未找到 zbarimg，请安装 zbar"))
     args = [binary, "--quiet", "--nodbus", *extra_args, str(path)]
     try:
         completed = subprocess.run(args, capture_output=True, text=True, timeout=timeout, check=False)
     except OSError as exc:
         raise BarcodeError(str(exc)) from None
     except subprocess.TimeoutExpired:
-        raise BarcodeError("解码超时") from None
+        raise BarcodeError(_("解码超时")) from None
     if completed.returncode not in (0, NOTHING_FOUND):
-        message = completed.stderr.strip() or f"zbarimg 退出码 {completed.returncode}"
+        message = completed.stderr.strip() or _("zbarimg 退出码 {returncode}").format(
+            returncode=completed.returncode
+        )
         raise BarcodeError(message)
     codes = parse_output(completed.stdout)
     for code in codes:

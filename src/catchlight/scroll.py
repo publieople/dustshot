@@ -9,6 +9,8 @@ from collections.abc import Callable, Sequence
 
 from PIL import Image
 
+from .i18n import _
+
 MIN_OVERLAP = 24
 BAND = 96
 TOLERANCE = 8.0
@@ -91,7 +93,7 @@ def find_overlap(
             band,
         )
         scores.append((overlap, score))
-    best = min(score for _, score in scores)
+    best = min(score for _unused, score in scores)
     if best > tolerance:
         return 0
     close = [overlap for overlap, score in scores if score <= best + 0.25]
@@ -107,7 +109,7 @@ def stitch_vertical(
     """Join frames captured while scrolling; returns the canvas and the overlaps used."""
     frames = [image.convert("RGB") for image in images if image is not None]
     if not frames:
-        raise ScrollError("没有可拼接的画面")
+        raise ScrollError(_("没有可拼接的画面"))
     canvas = frames[0].copy()
     overlaps: list[int] = []
     for frame in frames[1:]:
@@ -142,33 +144,33 @@ def build_advance_command(
     binary = command or backend
     args = [binary]
     if backend == "wtype":
-        for _ in range(max(1, amount)):
+        for _unused in range(max(1, amount)):
             args += ["-k", NEXT_KEY]
         return args
     if backend == "ydotool":
-        for _ in range(max(1, amount)):
+        for _unused in range(max(1, amount)):
             args += ["click", "--", str(SCROLL_BUTTON)]
         return args
-    raise ScrollError(f"未知的滚动后端：{backend}")
+    raise ScrollError(_("未知的滚动后端：{backend}").format(backend=backend))
 
 
 def advance_scroll(backend: str | None = None, amount: int = 1, timeout: float = 10.0) -> None:
     """Scroll the focused window one screenful (wtype key or ydotool wheel click)."""
     chosen = backend or next(iter(available_backends()), "")
     if not chosen:
-        raise ScrollError("没有可用的滚动后端（需要 wtype 或 ydotool）")
+        raise ScrollError(_("没有可用的滚动后端（需要 wtype 或 ydotool）"))
     args = build_advance_command(chosen, amount=amount)
     if shutil.which(args[0]) is None:
-        raise ScrollError(f"找不到滚动命令：{args[0]}")
+        raise ScrollError(_("找不到滚动命令：{command}").format(command=args[0]))
     try:
         subprocess.run(args, check=True, timeout=timeout, capture_output=True)
     except FileNotFoundError as error:
-        raise ScrollError(f"找不到滚动命令：{args[0]}") from error
+        raise ScrollError(_("找不到滚动命令：{command}").format(command=args[0])) from error
     except subprocess.CalledProcessError as error:
         detail = (error.stderr or b"").decode("utf-8", "replace").strip()
-        raise ScrollError(f"滚动失败：{detail or error.returncode}") from error
+        raise ScrollError(_("滚动失败：{detail}").format(detail=detail or error.returncode)) from error
     except subprocess.TimeoutExpired as error:
-        raise ScrollError("滚动命令超时") from error
+        raise ScrollError(_("滚动命令超时")) from error
 
 
 def scroll_capture(
@@ -185,7 +187,7 @@ def scroll_capture(
     settle waits for the compositor to present the scrolled frame before the next capture.
     """
     if capture is None:
-        raise ScrollError("缺少截图函数")
+        raise ScrollError(_("缺少截图函数"))
     count = max(1, steps)
     frames: list[Image.Image] = []
     for index in range(count):
@@ -200,7 +202,9 @@ def scroll_capture(
     canvas, overlaps = stitch_vertical(frames, min_overlap=min_overlap)
     if len(frames) > 1 and all(overlap >= frames[index].height for index, overlap in enumerate(overlaps)):
         raise ScrollError(
-            "画面没有滚动：可能是滚动工具（wtype/ydotool）没能把输入送到目标窗口，"
-            "或者选区内容不足一屏；可以改用 --manual 自己滚动，或换成 --advance ydotool"
+            _(
+                "画面没有滚动：可能是滚动工具（wtype/ydotool）没能把输入送到目标窗口，"
+                "或者选区内容不足一屏；可以改用 --manual 自己滚动，或换成 --advance ydotool"
+            )
         )
     return canvas, overlaps

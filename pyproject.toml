@@ -37,6 +37,9 @@ Changelog = "https://github.com/publieople/catchlight/releases"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+catchlight = ["locale/*/LC_MESSAGES/*.mo"]
+
 [tool.ruff]
 line-length = 110
 target-version = "py311"

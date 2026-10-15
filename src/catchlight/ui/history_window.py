@@ -16,6 +16,7 @@ from PIL import Image, ImageOps
 
 from .. import clipboard
 from ..history import History, HistoryEntry
+from ..i18n import _
 from .pixbuf import to_pixbuf
 
 THUMBNAIL = (240, 160)
@@ -66,14 +67,14 @@ class HistoryWindow(Gtk.ApplicationWindow):
         self.history = history or History()
         self.limit = int(limit)
         self.on_close = on_close
-        self.set_title("Catchlight 历史")
+        self.set_title(_("Catchlight 历史"))
         self.set_default_size(900, 640)
 
         header = Gtk.HeaderBar()
         for label, tip, callback in (
-            ("刷新", "重新读取历史记录", self.refresh),
-            ("清空", "删除全部历史记录", self.clear),
-            ("关闭", "关闭窗口 (Esc)", self.close),
+            (_("刷新"), _("重新读取历史记录"), self.refresh),
+            (_("清空"), _("删除全部历史记录"), self.clear),
+            (_("关闭"), _("关闭窗口 (Esc)"), self.close),
         ):
             button = Gtk.Button(label=label)
             button.set_tooltip_text(tip)
@@ -94,7 +95,7 @@ class HistoryWindow(Gtk.ApplicationWindow):
 
         scroller = Gtk.ScrolledWindow()
         scroller.set_child(self.flow)
-        empty = Gtk.Label(label="还没有截图记录")
+        empty = Gtk.Label(label=_("还没有截图记录"))
         empty.add_css_class("dim-label")
         self.stack = Gtk.Stack()
         self.stack.add_named(scroller, "grid")
@@ -117,10 +118,10 @@ class HistoryWindow(Gtk.ApplicationWindow):
         if entry.exists():
             pixbuf = thumbnail(entry.path)
             preview = (
-                Gtk.Picture.new_for_pixbuf(pixbuf) if pixbuf is not None else Gtk.Label(label="无法预览")
+                Gtk.Picture.new_for_pixbuf(pixbuf) if pixbuf is not None else Gtk.Label(label=_("无法预览"))
             )
         else:
-            preview = Gtk.Label(label="文件已不存在")
+            preview = Gtk.Label(label=_("文件已不存在"))
             preview.add_css_class("dim-label")
         preview.set_size_request(THUMBNAIL[0], THUMBNAIL[1])
         box.append(preview)
@@ -137,11 +138,11 @@ class HistoryWindow(Gtk.ApplicationWindow):
 
         actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
         for label, tip, callback in (
-            ("编辑", "在编辑器里打开", lambda: self._edit(entry)),
-            ("复制", "复制到剪贴板", lambda: self._copy(entry)),
-            ("贴图", "钉在屏幕上", lambda: self._pin(entry)),
-            ("目录", "在文件管理器里显示", lambda: self._reveal(entry)),
-            ("删除", "从历史记录里移除", lambda: self._remove(entry)),
+            (_("编辑"), _("在编辑器里打开"), lambda: self._edit(entry)),
+            (_("复制"), _("复制到剪贴板"), lambda: self._copy(entry)),
+            (_("贴图"), _("钉在屏幕上"), lambda: self._pin(entry)),
+            (_("目录"), _("在文件管理器里显示"), lambda: self._reveal(entry)),
+            (_("删除"), _("从历史记录里移除"), lambda: self._remove(entry)),
         ):
             button = Gtk.Button(label=label)
             button.set_tooltip_text(tip)

@@ -95,10 +95,10 @@ def parse_outputs(text: str) -> list[OutputInfo]:
             continue
         if line.startswith("Logical position:"):
             values = line.split(":", 1)[1]
-            x_text, _, y_text = values.partition(",")
+            x_text, _sep, y_text = values.partition(",")
             current["logical_pos"] = (int(x_text.strip()), int(y_text.strip()))
         elif line.startswith("Logical size:"):
-            width_text, _, height_text = line.split(":", 1)[1].partition("x")
+            width_text, _sep, height_text = line.split(":", 1)[1].partition("x")
             position = current.get("logical_pos") or (0, 0)
             current["logical"] = Geometry(
                 position[0], position[1], int(width_text.strip()), int(height_text.strip())

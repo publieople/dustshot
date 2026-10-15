@@ -14,6 +14,7 @@ from .. import clipboard, ocr, output, redact
 from ..annotation.document import Document
 from ..config import DEFAULT_PALETTE
 from ..history import History
+from ..i18n import _
 from .canvas import TOOLS, Canvas
 from .pin import PinWindow
 
@@ -37,7 +38,7 @@ class EditorWindow(Gtk.ApplicationWindow):
         self.history = History()
         self._ocr_busy = False
         annotation = getattr(settings, "annotation", None)
-        self.set_title("Catchlight 编辑器")
+        self.set_title(_("Catchlight 编辑器"))
         self.set_default_size(1180, 780)
 
         self.canvas = Canvas(document, annotation, on_change=self._on_change, on_status=self._set_status)
@@ -45,15 +46,15 @@ class EditorWindow(Gtk.ApplicationWindow):
         header = Gtk.HeaderBar()
         header.set_title_widget(Gtk.Label(label="Catchlight"))
         for label, tip, callback in (
-            ("撤销", "撤销 (Ctrl+Z)", self.undo),
-            ("重做", "重做 (Ctrl+Shift+Z)", self.redo),
-            ("复制", "复制到剪贴板 (Ctrl+C)", self.copy),
-            ("保存", "保存为文件 (Ctrl+S)", self.save),
-            ("保存并复制", "保存、复制并关闭", self.finish),
-            ("贴图", "把当前图像贴到屏幕 (Ctrl+P)", self.pin),
-            ("OCR", "识别图中的文字", self.toggle_ocr),
-            ("脱敏", "自动遮住邮箱、电话、证件号等敏感文字", self.redact),
-            ("关闭", "关闭 (Ctrl+W)", self.close),
+            (_("撤销"), _("撤销 (Ctrl+Z)"), self.undo),
+            (_("重做"), _("重做 (Ctrl+Shift+Z)"), self.redo),
+            (_("复制"), _("复制到剪贴板 (Ctrl+C)"), self.copy),
+            (_("保存"), _("保存为文件 (Ctrl+S)"), self.save),
+            (_("保存并复制"), _("保存、复制并关闭"), self.finish),
+            (_("贴图"), _("把当前图像贴到屏幕 (Ctrl+P)"), self.pin),
+            ("OCR", _("识别图中的文字"), self.toggle_ocr),
+            (_("脱敏"), _("自动遮住邮箱、电话、证件号等敏感文字"), self.redact),
+            (_("关闭"), _("关闭 (Ctrl+W)"), self.close),
         ):
             header.pack_end(_header_button(label, tip, callback))
         self.set_titlebar(header)
@@ -74,7 +75,7 @@ class EditorWindow(Gtk.ApplicationWindow):
         center.append(self.ocr_panel)
         center.set_vexpand(True)
 
-        self.status = Gtk.Label(label="就绪")
+        self.status = Gtk.Label(label=_("就绪"))
         self.status.set_xalign(0.0)
         self.status.add_css_class("dim-label")
         self.status.set_margin_start(10)
@@ -92,7 +93,7 @@ class EditorWindow(Gtk.ApplicationWindow):
         keys.connect("key-pressed", self._on_key)
         self.add_controller(keys)
         self.connect("close-request", self._on_close_request)
-        self._set_status(f"就绪  |  {TOOLS[0][1]}")
+        self._set_status(_("就绪  |  {tool}").format(tool=TOOLS[0][1]))
         self.canvas._emit_status()
 
     # ------------------------------------------------------------------ toolbar
@@ -123,13 +124,13 @@ class EditorWindow(Gtk.ApplicationWindow):
         palette = self._palette(annotation)
         bar.append(palette)
 
-        bar.append(Gtk.Label(label="粗细"))
+        bar.append(Gtk.Label(label=_("粗细")))
         self.width_spin = Gtk.SpinButton.new_with_range(1, 60, 1)
         self.width_spin.set_value(self.canvas.tool_width())
         self.width_spin.connect("value-changed", lambda spin: self.canvas.set_width(int(spin.get_value())))
         bar.append(self.width_spin)
 
-        bar.append(Gtk.Label(label="字号"))
+        bar.append(Gtk.Label(label=_("字号")))
         self.size_spin = Gtk.SpinButton.new_with_range(8, 96, 1)
         self.size_spin.set_value(int(getattr(annotation, "text_size", 16) or 16))
         self.size_spin.connect(
@@ -139,8 +140,8 @@ class EditorWindow(Gtk.ApplicationWindow):
         bar.append(self.size_spin)
 
         bar.append(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL))
-        bar.append(_header_button("清除", "删除全部标注", self.clear_items))
-        bar.append(_header_button("删除所选", "删除选中的图元 (Delete)", self.canvas.delete_selected))
+        bar.append(_header_button(_("清除"), _("删除全部标注"), self.clear_items))
+        bar.append(_header_button(_("删除所选"), _("删除选中的图元 (Delete)"), self.canvas.delete_selected))
         return bar
 
     def _palette(self, annotation: Any) -> Gtk.Widget:
@@ -200,28 +201,28 @@ class EditorWindow(Gtk.ApplicationWindow):
         if self.document.undo():
             self.canvas.selected = None
             self.canvas.changed()
-            self._set_status("已撤销")
+            self._set_status(_("已撤销"))
         else:
-            self._set_status("没有可撤销的操作")
+            self._set_status(_("没有可撤销的操作"))
 
     def redo(self) -> None:
         if self.document.redo():
             self.canvas.selected = None
             self.canvas.changed()
-            self._set_status("已重做")
+            self._set_status(_("已重做"))
         else:
-            self._set_status("没有可重做的操作")
+            self._set_status(_("没有可重做的操作"))
 
     def clear_items(self) -> None:
         self.document.clear()
         self.canvas.selected = None
         self.canvas.changed()
-        self._set_status("已清除全部标注")
+        self._set_status(_("已清除全部标注"))
 
     def copy(self) -> bool:
         image = self.document.render()
         ok = clipboard.copy_image(image)
-        self._set_status("已复制到剪贴板" if ok else "复制失败，请检查 wl-clipboard")
+        self._set_status(_("已复制到剪贴板") if ok else _("复制失败，请检查 wl-clipboard"))
         return ok
 
     def save(self) -> str | None:
@@ -235,7 +236,7 @@ class EditorWindow(Gtk.ApplicationWindow):
             pass
         if capture is not None and getattr(capture, "copy_after_capture", True):
             clipboard.copy_image(image)
-        self._set_status(f"已保存 {path}")
+        self._set_status(_("已保存 {path}").format(path=path))
         return path
 
     def finish(self) -> None:
@@ -250,19 +251,21 @@ class EditorWindow(Gtk.ApplicationWindow):
             spawner(image, position=(180, 180))
         else:
             PinWindow(self.app, image, self.settings, position=(180, 180))
-        self._set_status("已贴图，可拖动移动、滚轮缩放")
+        self._set_status(_("已贴图，可拖动移动、滚轮缩放"))
 
     def paste(self) -> None:
         image = clipboard.paste_image()
         if image is None:
-            self._set_status("剪贴板里没有图片")
+            self._set_status(_("剪贴板里没有图片"))
             return
         self.document = Document(image, getattr(self.settings, "annotation", None), source="clipboard")
         self.canvas.doc = self.document
         self.canvas.selected = None
         self.canvas._cache_sig = ()
         self.canvas.changed()
-        self._set_status(f"已粘贴剪贴板图片 {image.size[0]} x {image.size[1]}")
+        self._set_status(
+            _("已粘贴剪贴板图片 {width} x {height}").format(width=image.size[0], height=image.size[1])
+        )
 
     def toggle_ocr(self) -> None:
         if self.ocr_panel.get_reveal_child():
@@ -275,7 +278,7 @@ class EditorWindow(Gtk.ApplicationWindow):
         if self._ocr_busy:
             return
         self._ocr_busy = True
-        self._set_status("正在识别文字…")
+        self._set_status(_("正在识别文字…"))
         image = self.document.render()
         languages = getattr(getattr(self.settings, "ocr", None), "languages", "eng+chi_sim")
         language = str(languages or "eng+chi_sim")
@@ -283,9 +286,9 @@ class EditorWindow(Gtk.ApplicationWindow):
         def work() -> None:
             try:
                 result = ocr.recognize(image, languages=language)
-                payload = result.text.strip() or "(没有识别到文字)"
+                payload = result.text.strip() or _("(没有识别到文字)")
             except Exception as exc:  # pragma: no cover - depends on tesseract
-                payload = f"识别失败：{exc}"
+                payload = _("识别失败：{exc}").format(exc=exc)
             GLib.idle_add(self._apply_ocr, payload)
 
         threading.Thread(target=work, daemon=True).start()
@@ -294,7 +297,7 @@ class EditorWindow(Gtk.ApplicationWindow):
         self._ocr_busy = False
         buffer = self.ocr_view.get_buffer()
         buffer.set_text(text)
-        self._set_status(f"识别完成，共 {len(text)} 个字符")
+        self._set_status(_("识别完成，共 {count} 个字符").format(count=len(text)))
         return False
 
     def redact(self) -> None:
@@ -302,7 +305,7 @@ class EditorWindow(Gtk.ApplicationWindow):
         if self._ocr_busy:
             return
         self._ocr_busy = True
-        self._set_status("正在查找敏感信息…")
+        self._set_status(_("正在查找敏感信息…"))
         image = self.document.render()
         languages = getattr(getattr(self.settings, "ocr", None), "languages", "eng+chi_sim")
         annotation = getattr(self.settings, "annotation", None)
@@ -315,7 +318,7 @@ class EditorWindow(Gtk.ApplicationWindow):
                 matches = redact.find_sensitive(result.words)
                 items = redact.mask_items(matches, block=block, blur_radius=blur)
             except Exception as exc:  # pragma: no cover - depends on tesseract
-                GLib.idle_add(self._apply_redaction, [], f"查找失败：{exc}")
+                GLib.idle_add(self._apply_redaction, [], _("查找失败：{exc}").format(exc=exc))
                 return
             GLib.idle_add(self._apply_redaction, items, "")
 
@@ -327,14 +330,14 @@ class EditorWindow(Gtk.ApplicationWindow):
             self._set_status(error)
             return False
         if not items:
-            self._set_status("没有发现敏感信息")
+            self._set_status(_("没有发现敏感信息"))
             return False
         self.document.push_undo()
         for item in items:
             self.document.items.append(item)
         self.document.touch()
         self.canvas.refresh()
-        self._set_status(f"已遮住 {len(items)} 处敏感信息")
+        self._set_status(_("已遮住 {count} 处敏感信息").format(count=len(items)))
         return False
 
     def _close_request(self) -> None:

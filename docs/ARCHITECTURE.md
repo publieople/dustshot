@@ -33,6 +33,7 @@ what lets the test suite and CI run headless.
 | `catchlight/ui/tray.py` | StatusNotifierItem server and dbusmenu |
 | `catchlight/ui/history_window.py` | the browsable capture history window |
 | `catchlight/ui/app.py` | `Gtk.Application` that owns the windows for one CLI invocation |
+| `catchlight/i18n.py` | gettext setup, the `_` helper and the compiled catalogues |
 | `catchlight/cli.py` | argparse front end for every command |
 
 ## Two implementation notes worth knowing

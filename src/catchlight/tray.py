@@ -11,9 +11,11 @@ from dataclasses import dataclass
 
 from PIL import Image, ImageDraw
 
+from .i18n import _
+
 ICON_NAME = "io.github.catchlight"
 TITLE = "Catchlight"
-TOOLTIP = "Wayland 原生的截图、标注与贴图工具"
+TOOLTIP = _("Wayland 原生的截图、标注与贴图工具")
 ITEM_PATH = "/StatusNotifierItem"
 MENU_PATH = "/MenuBar"
 MENU_ROOT = 0
@@ -38,13 +40,13 @@ class MenuEntry:
 
 
 MENU: tuple[MenuEntry, ...] = (
-    MenuEntry(1, "区域截图", ("region",)),
-    MenuEntry(2, "全屏截图", ("full",)),
-    MenuEntry(3, "录制区域", ("record",)),
+    MenuEntry(1, _("区域截图"), ("region",)),
+    MenuEntry(2, _("全屏截图"), ("full",)),
+    MenuEntry(3, _("录制区域"), ("record",)),
     MenuEntry(4, separator=True),
-    MenuEntry(5, "截图历史", ("history", "--gui")),
+    MenuEntry(5, _("截图历史"), ("history", "--gui")),
     MenuEntry(6, separator=True),
-    MenuEntry(QUIT_ID, "退出托盘"),
+    MenuEntry(QUIT_ID, _("退出托盘")),
 )
 
 
@@ -80,7 +82,7 @@ def icon_image(size: int = 48) -> Image.Image:
     """Draw the tray icon: the dark tile, the red ring and the yellow tick."""
 
     if size < 8:
-        raise ValueError("图标尺寸至少 8 像素")
+        raise ValueError(_("图标尺寸至少 8 像素"))
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
     stroke = max(1, round(size / 12))
