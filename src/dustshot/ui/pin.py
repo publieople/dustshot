@@ -1,4 +1,4 @@
-"""Pinned image windows: always-on-top overlay snippets for Catchlight."""
+"""Pinned image windows: always-on-top overlay snippets for Dustshot."""
 
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ class PinWindow(Gtk.ApplicationWindow):
         self.click_through = False
         self._toolbar: Gtk.Widget | None = None
 
-        self.set_title("Catchlight pin")
+        self.set_title("Dustshot pin")
         self.area = Gtk.DrawingArea()
         self.area.set_draw_func(self._draw)
         self.set_child(self._build())
@@ -61,7 +61,7 @@ class PinWindow(Gtk.ApplicationWindow):
             margins=(self.position[1], 0, 0, self.position[0]),
             exclusive_zone=-1,
             keyboard="none",
-            namespace="catchlight-pin",
+            namespace="dustshot-pin",
         )
         self._shell = layer_shell()
         self._apply_size()
@@ -282,7 +282,7 @@ class PinWindow(Gtk.ApplicationWindow):
 
         capture = getattr(self.settings, "capture", None)
         if capture is None:
-            handle, path = tempfile.mkstemp(prefix="catchlight-pin-", suffix=".png")
+            handle, path = tempfile.mkstemp(prefix="dustshot-pin-", suffix=".png")
             os.close(handle)
             self.image.save(path)
             return path

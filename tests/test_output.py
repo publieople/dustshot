@@ -7,8 +7,8 @@ from pathlib import Path
 
 from PIL import Image
 
-from catchlight.config import CaptureSettings, Settings
-from catchlight.output import build_name, default_save_path, human_timestamp, save_image, unique_path
+from dustshot.config import CaptureSettings, Settings
+from dustshot.output import build_name, default_save_path, human_timestamp, save_image, unique_path
 
 
 def make_settings(tmp_path: Path, fmt: str = "png") -> Settings:

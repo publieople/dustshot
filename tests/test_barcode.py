@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from catchlight import barcode
+from dustshot import barcode
 
 
 def test_parse_output_reads_type_and_payload() -> None:
@@ -39,10 +39,10 @@ def test_decode_requires_the_decoder(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_decode_reads_a_generated_qr_code(tmp_path: Path) -> None:
     source = tmp_path / "qr.png"
     subprocess.run(
-        ["qrencode", "-o", str(source), "-s", "6", "catchlight"],
+        ["qrencode", "-o", str(source), "-s", "6", "dustshot"],
         check=True,
         capture_output=True,
     )
     codes = barcode.decode_file(source)
-    assert [code.text for code in codes] == ["catchlight"]
+    assert [code.text for code in codes] == ["dustshot"]
     assert codes[0].kind.lower().startswith("qr")

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from catchlight.annotation.items import MosaicItem, RectItem
-from catchlight.capture.base import Geometry
-from catchlight.ocr import WordBox
-from catchlight.redact import KINDS, Match, boxes, find_sensitive, mask_items
+from dustshot.annotation.items import MosaicItem, RectItem
+from dustshot.capture.base import Geometry
+from dustshot.ocr import WordBox
+from dustshot.redact import KINDS, Match, boxes, find_sensitive, mask_items
 
 
 def word(text: str, x: int, y: int, line: int = 1001, width: int | None = None) -> WordBox:

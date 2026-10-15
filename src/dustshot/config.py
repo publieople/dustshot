@@ -1,6 +1,6 @@
-"""Persistent settings for Catchlight.
+"""Persistent settings for Dustshot.
 
-A small JSON store under XDG_CONFIG_HOME/catchlight/config.json with dataclass
+A small JSON store under XDG_CONFIG_HOME/dustshot/config.json with dataclass
 defaults. Unknown keys found on disk are preserved so newer versions do not
 destroy user configuration.
 """
@@ -13,7 +13,7 @@ from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from pathlib import Path
 from typing import Any
 
-APP_SLUG = "catchlight"
+APP_SLUG = "dustshot"
 
 
 def _xdg(env: str, fallback: Path) -> Path:

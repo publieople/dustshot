@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from catchlight.pinboard import MAX_SCALE, MIN_SCALE, PinBoard
+from dustshot.pinboard import MAX_SCALE, MIN_SCALE, PinBoard
 
 
 class FakePin:

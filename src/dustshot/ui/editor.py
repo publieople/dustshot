@@ -1,4 +1,4 @@
-"""Annotation editor window for Catchlight."""
+"""Annotation editor window for Dustshot."""
 
 from __future__ import annotations
 
@@ -38,13 +38,13 @@ class EditorWindow(Gtk.ApplicationWindow):
         self.history = History()
         self._ocr_busy = False
         annotation = getattr(settings, "annotation", None)
-        self.set_title(_("Catchlight 编辑器"))
+        self.set_title(_("Dustshot 编辑器"))
         self.set_default_size(1180, 780)
 
         self.canvas = Canvas(document, annotation, on_change=self._on_change, on_status=self._set_status)
 
         header = Gtk.HeaderBar()
-        header.set_title_widget(Gtk.Label(label="Catchlight"))
+        header.set_title_widget(Gtk.Label(label="Dustshot"))
         for label, tip, callback in (
             (_("撤销"), _("撤销 (Ctrl+Z)"), self.undo),
             (_("重做"), _("重做 (Ctrl+Shift+Z)"), self.redo),

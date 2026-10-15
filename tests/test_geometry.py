@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PIL import Image
 
-from catchlight.capture.base import Frame, Geometry, OutputInfo
+from dustshot.capture.base import Frame, Geometry, OutputInfo
 
 
 def test_geometry_properties() -> None:

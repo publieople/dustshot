@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from catchlight.ui import layer
+from dustshot.ui import layer
 
 
 def _no_find_library(monkeypatch):
@@ -46,6 +46,6 @@ def test_preload_active_reads_the_environment(monkeypatch):
 
 
 def test_ensure_preload_respects_the_escape_hatch(monkeypatch):
-    monkeypatch.setenv("CATCHLIGHT_NO_REEXEC", "1")
+    monkeypatch.setenv("DUSTSHOT_NO_REEXEC", "1")
     monkeypatch.delenv("LD_PRELOAD", raising=False)
     assert layer.ensure_preload() is False

@@ -1,4 +1,4 @@
-"""Command line interface for Catchlight."""
+"""Command line interface for Dustshot."""
 
 from __future__ import annotations
 
@@ -18,23 +18,23 @@ from .config import Settings, SettingsStore, cache_dir, config_path, data_dir, e
 from .history import History
 from .i18n import _
 
-PROGRAM = "catchlight"
+PROGRAM = "dustshot"
 
 DESCRIPTION = _("Wayland 原生的截图、标注与贴图工具")
 
 EPILOG = _("""常用示例：
-    catchlight                         框选截图并打开编辑器
-    catchlight full                    截取全部输出
-    catchlight region --pin            框选后直接钉在屏幕上
-    catchlight ocr                     框选后识别文字
-    catchlight record --gif            框选后录制并转 GIF
-    catchlight pin shot.png            把已有图片钉在屏幕上
-    catchlight codes                   框选并识别二维码/条码
-    catchlight redact                 框选并自动遮住敏感信息
-    catchlight scroll --steps 4         滚动截图并拼接成长图
-    catchlight history --gui           浏览截图历史
-    catchlight tray                   在系统托盘里驻留一个图标
-    catchlight doctor                  检查运行环境
+    dustshot                         框选截图并打开编辑器
+    dustshot full                    截取全部输出
+    dustshot region --pin            框选后直接钉在屏幕上
+    dustshot ocr                     框选后识别文字
+    dustshot record --gif            框选后录制并转 GIF
+    dustshot pin shot.png            把已有图片钉在屏幕上
+    dustshot codes                   框选并识别二维码/条码
+    dustshot redact                 框选并自动遮住敏感信息
+    dustshot scroll --steps 4         滚动截图并拼接成长图
+    dustshot history --gui           浏览截图历史
+    dustshot tray                   在系统托盘里驻留一个图标
+    dustshot doctor                  检查运行环境
 """)
 
 
@@ -579,36 +579,36 @@ def command_settings(args: argparse.Namespace, settings: Settings, store: Settin
 HOTKEY_TEMPLATES = {
     "niri": """# ~/.config/niri/config.kdl
 binds {
-    Mod+Shift+S { spawn "catchlight" "region"; }
-    Mod+Shift+F { spawn "catchlight" "full"; }
-    Mod+Shift+O { spawn "catchlight" "ocr"; }
-    Mod+Shift+R { spawn "catchlight" "record" "--gif"; }
-    Mod+Shift+V { spawn "catchlight" "pin"; }
+    Mod+Shift+S { spawn "dustshot" "region"; }
+    Mod+Shift+F { spawn "dustshot" "full"; }
+    Mod+Shift+O { spawn "dustshot" "ocr"; }
+    Mod+Shift+R { spawn "dustshot" "record" "--gif"; }
+    Mod+Shift+V { spawn "dustshot" "pin"; }
 }""",
     "hyprland": """# ~/.config/hypr/hyprland.conf
-bind = SUPER SHIFT, S, exec, catchlight region
-bind = SUPER SHIFT, F, exec, catchlight full
-bind = SUPER SHIFT, O, exec, catchlight ocr
-bind = SUPER SHIFT, R, exec, catchlight record --gif
-bind = SUPER SHIFT, V, exec, catchlight pin""",
+bind = SUPER SHIFT, S, exec, dustshot region
+bind = SUPER SHIFT, F, exec, dustshot full
+bind = SUPER SHIFT, O, exec, dustshot ocr
+bind = SUPER SHIFT, R, exec, dustshot record --gif
+bind = SUPER SHIFT, V, exec, dustshot pin""",
     "sway": """# ~/.config/sway/config
-bindsym $mod+Shift+s exec catchlight region
-bindsym $mod+Shift+f exec catchlight full
-bindsym $mod+Shift+o exec catchlight ocr
-bindsym $mod+Shift+r exec catchlight record --gif""",
+bindsym $mod+Shift+s exec dustshot region
+bindsym $mod+Shift+f exec dustshot full
+bindsym $mod+Shift+o exec dustshot ocr
+bindsym $mod+Shift+r exec dustshot record --gif""",
     "gnome": _("""# GNOME：设置 -> 键盘 -> 自定义快捷键
-名称: Catchlight 截图    命令: catchlight region    按键: Super+Shift+S
-名称: Catchlight 全屏    命令: catchlight full      按键: Super+Shift+F
-名称: Catchlight 取字    命令: catchlight ocr       按键: Super+Shift+O
-名称: Catchlight 录制    命令: catchlight record --gif   按键: Super+Shift+R"""),
+名称: Dustshot 截图    命令: dustshot region    按键: Super+Shift+S
+名称: Dustshot 全屏    命令: dustshot full      按键: Super+Shift+F
+名称: Dustshot 取字    命令: dustshot ocr       按键: Super+Shift+O
+名称: Dustshot 录制    命令: dustshot record --gif   按键: Super+Shift+R"""),
     "kde": _("""# 系统设置 -> 快捷键 -> 自定义快捷键 -> 新建 -> 命令/URL
-动作: Catchlight 截图   触发器: Meta+Shift+S   命令: catchlight region
-动作: Catchlight 全屏   触发器: Meta+Shift+F   命令: catchlight full
-动作: Catchlight 取字   触发器: Meta+Shift+O   命令: catchlight ocr
-动作: Catchlight 录制   触发器: Meta+Shift+R   命令: catchlight record --gif"""),
+动作: Dustshot 截图   触发器: Meta+Shift+S   命令: dustshot region
+动作: Dustshot 全屏   触发器: Meta+Shift+F   命令: dustshot full
+动作: Dustshot 取字   触发器: Meta+Shift+O   命令: dustshot ocr
+动作: Dustshot 录制   触发器: Meta+Shift+R   命令: dustshot record --gif"""),
     "wlroots": _("""# 其它 wlroots 合成器（同 sway 写法）
-bindsym $mod+Shift+s exec catchlight region
-bindsym $mod+Shift+f exec catchlight full"""),
+bindsym $mod+Shift+s exec dustshot region
+bindsym $mod+Shift+f exec dustshot full"""),
 }
 
 
@@ -637,7 +637,7 @@ def command_hotkeys(args: argparse.Namespace, settings: Settings, store: Setting
     if template is None:
         print(_("支持的合成器：{}").format(", ".join(sorted(HOTKEY_TEMPLATES))), file=sys.stderr)
         return 2
-    print(_("# Catchlight 快捷键（{name}）").format(name=name))
+    print(_("# Dustshot 快捷键（{name}）").format(name=name))
     print(template)
     print("")
     print(_("提示：{PROGRAM} 是唯一入口命令，所有子命令都支持 --help。").format(PROGRAM=PROGRAM))

@@ -1,7 +1,7 @@
 """Translation support for the interface text.
 
 The message catalogues live next to this module in
-``locale/<language>/LC_MESSAGES/catchlight.mo`` and are looked up once per process by
+``locale/<language>/LC_MESSAGES/dustshot.mo`` and are looked up once per process by
 :func:`install`.  Without a compiled catalogue every lookup returns the original message, so
 the application keeps working in Chinese and the tests stay independent of the locale.
 """
@@ -14,12 +14,12 @@ import shutil
 import subprocess
 from pathlib import Path
 
-DOMAIN = "catchlight"
+DOMAIN = "dustshot"
 LOCALE_DIR = Path(__file__).resolve().parent / "locale"
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 PO_DIR = PROJECT_DIR / "po"
-LANGUAGE_VARIABLE = "CATCHLIGHT_LANG"
-LOCALE_VARIABLE = "CATCHLIGHT_LOCALEDIR"
+LANGUAGE_VARIABLE = "DUSTSHOT_LANG"
+LOCALE_VARIABLE = "DUSTSHOT_LOCALEDIR"
 
 _translation: gettext.NullTranslations = gettext.NullTranslations()
 
@@ -118,7 +118,7 @@ def compile_catalogs(podir: str | Path | None = None, localedir: str | Path | No
 def _main(argv: list[str] | None = None) -> int:
     import argparse
 
-    parser = argparse.ArgumentParser(prog="python3 -m catchlight.i18n", description=_("编译或列出翻译目录"))
+    parser = argparse.ArgumentParser(prog="python3 -m dustshot.i18n", description=_("编译或列出翻译目录"))
     parser.add_argument("action", choices=("available", "compile"), nargs="?", default="available")
     args = parser.parse_args(argv)
     if args.action == "compile":

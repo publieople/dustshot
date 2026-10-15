@@ -199,7 +199,7 @@ def recognize(
         raise OcrError("tesseract is not installed; install it or set ocr.tesseract_cmd")
     lang = choose_languages(languages, cmd)
     prepared = preprocess(image, upscale=upscale)
-    with tempfile.TemporaryDirectory(prefix="catchlight-ocr-") as workdir:
+    with tempfile.TemporaryDirectory(prefix="dustshot-ocr-") as workdir:
         source = Path(workdir) / "input.png"
         prepared.save(source)
         try:

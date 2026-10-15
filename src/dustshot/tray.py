@@ -2,7 +2,7 @@
 
 Everything in this module works without PyGObject, so the headless test suite can
 cover the menu and the icon bytes; the D-Bus server itself lives in
-catchlight.ui.tray and is imported only by the tray command.
+dustshot.ui.tray and is imported only by the tray command.
 """
 
 from __future__ import annotations
@@ -14,8 +14,8 @@ from PIL import Image, ImageDraw
 from . import APP_ID
 from .i18n import _
 
-ICON_NAME = "io.github.catchlight"
-TITLE = "Catchlight"
+ICON_NAME = APP_ID
+TITLE = "Dustshot"
 TOOLTIP = _("Wayland 原生的截图、标注与贴图工具")
 ITEM_PATH = "/StatusNotifierItem"
 MENU_PATH = "/MenuBar"

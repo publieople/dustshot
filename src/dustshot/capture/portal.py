@@ -4,7 +4,7 @@ Compositors without wlr-screencopy (GNOME, KDE, ...) still publish the
 ScreenCast portal, which hands out one PipeWire stream per shared monitor. This
 module runs the portal request/response dance (CreateSession -> SelectSources ->
 Start -> OpenPipeWireRemote) and pulls a frame per stream through a small
-GStreamer pipeline, so "catchlight full" and "catchlight region --rect" work
+GStreamer pipeline, so "dustshot full" and "dustshot region --rect" work
 there too.
 
 Everything that talks to D-Bus or GStreamer is imported lazily inside
@@ -55,12 +55,12 @@ PROBE_TIMEOUT = 3.0
 #: Compositors that only offer DMA-BUF buffers (niri) cannot negotiate those
 #: against videoconvert, so the second description imports them through GL.
 PIPELINES = (
-    "pipewiresrc fd={fd} path={node} client-name=Catchlight do-timestamp=true ! "
+    "pipewiresrc fd={fd} path={node} client-name=Dustshot do-timestamp=true ! "
     "videoconvert ! video/x-raw,format=RGB ! "
-    "appsink name=catchlight-sink max-buffers=1 drop=true sync=false",
-    "pipewiresrc fd={fd} path={node} client-name=Catchlight do-timestamp=true ! "
+    "appsink name=dustshot-sink max-buffers=1 drop=true sync=false",
+    "pipewiresrc fd={fd} path={node} client-name=Dustshot do-timestamp=true ! "
     "glupload ! glcolorconvert ! gldownload ! videoconvert ! video/x-raw,format=RGB ! "
-    "appsink name=catchlight-sink max-buffers=1 drop=true sync=false",
+    "appsink name=dustshot-sink max-buffers=1 drop=true sync=false",
 )
 
 #: How long one appsink pull waits before the pipeline is checked for errors.
@@ -625,7 +625,7 @@ class _Grabber:
             self.pipeline = Gst.parse_launch(description)
         except Exception as exc:
             raise PortalError(_("无法创建 GStreamer 管线：{exc}").format(exc=exc)) from exc
-        self.sink = self.pipeline.get_by_name("catchlight-sink")
+        self.sink = self.pipeline.get_by_name("dustshot-sink")
         if self.sink is None:
             raise PortalError(_("GStreamer 管线缺少 appsink"))
         if not hasattr(self.sink, "try_pull_sample"):

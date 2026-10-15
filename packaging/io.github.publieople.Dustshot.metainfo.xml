@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.catchlight</id>
+  <id>io.github.publieople.Dustshot</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
 
-  <name>Catchlight</name>
+  <name>Dustshot</name>
   <summary>Wayland screenshot, annotation, OCR and pinboard tool</summary>
 
   <description>
     <p>
-      Catchlight captures the screen on Wayland compositors that speak wlr-screencopy, annotates
+      Dustshot captures the screen on Wayland compositors that speak wlr-screencopy, annotates
       the result, decodes text, QR codes and barcodes, and keeps shots on screen as floating pins.
     </p>
     <p>Features:</p>
@@ -24,9 +24,9 @@
     </ul>
   </description>
 
-  <launchable type="desktop-id">io.github.catchlight.desktop</launchable>
-  <url type="homepage">https://github.com/publieople/catchlight</url>
-  <url type="bugtracker">https://github.com/publieople/catchlight/issues</url>
+  <launchable type="desktop-id">io.github.publieople.Dustshot.desktop</launchable>
+  <url type="homepage">https://github.com/publieople/dustshot</url>
+  <url type="bugtracker">https://github.com/publieople/dustshot/issues</url>
   <developer id="io.github.publieople">
     <name>publieople</name>
   </developer>
@@ -35,15 +35,15 @@
   <screenshots>
     <screenshot type="default">
       <caption>Region capture overlay</caption>
-      <image>https://raw.githubusercontent.com/publieople/catchlight/main/docs/images/selector.png</image>
+      <image>https://raw.githubusercontent.com/publieople/dustshot/main/docs/images/selector.png</image>
     </screenshot>
     <screenshot>
       <caption>Annotation editor</caption>
-      <image>https://raw.githubusercontent.com/publieople/catchlight/main/docs/images/editor.png</image>
+      <image>https://raw.githubusercontent.com/publieople/dustshot/main/docs/images/editor.png</image>
     </screenshot>
     <screenshot>
       <caption>Capture history</caption>
-      <image>https://raw.githubusercontent.com/publieople/catchlight/main/docs/images/history.png</image>
+      <image>https://raw.githubusercontent.com/publieople/dustshot/main/docs/images/history.png</image>
     </screenshot>
   </screenshots>
 

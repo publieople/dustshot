@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from PIL import Image
 
-from catchlight import APP_ID, cli, tray
+from dustshot import APP_ID, cli, tray
 
 
 def test_menu_ids_are_unique() -> None:
@@ -90,6 +90,6 @@ def test_item_bus_names_start_with_the_conventional_one() -> None:
 
 
 def test_item_bus_names_use_the_sandbox_id_when_there_is_one() -> None:
-    assert tray.item_bus_names(7, "io.github.catchlight")[1] == (
-        "io.github.catchlight.StatusNotifierItem-7-1"
+    assert tray.item_bus_names(7, "io.github.publieople.Dustshot")[1] == (
+        "io.github.publieople.Dustshot.StatusNotifierItem-7-1"
     )

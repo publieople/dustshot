@@ -7,9 +7,9 @@ import os
 import pytest
 from PIL import Image
 
-from catchlight.capture import portal
-from catchlight.capture.base import Frame, Geometry, OutputInfo
-from catchlight.capture.screencopy import CaptureError
+from dustshot.capture import portal
+from dustshot.capture.base import Frame, Geometry, OutputInfo
+from dustshot.capture.screencopy import CaptureError
 
 
 def frame_at(x: int, y: int, width: int, height: int, colour: tuple[int, int, int]) -> Frame:
@@ -180,7 +180,7 @@ def test_pipelines_are_ready_to_format() -> None:
     for template in portal.PIPELINES:
         description = template.format(fd=7, node=9)
         assert "pipewiresrc fd=7 path=9" in description
-        assert "appsink name=catchlight-sink" in description
+        assert "appsink name=dustshot-sink" in description
     assert "glupload" in portal.PIPELINES[1]
 
 

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from PIL import Image
 
-from catchlight.annotation.items import MosaicItem, RectItem, Style
-from catchlight.annotation.render import difference_ratio, render, render_to_file
+from dustshot.annotation.items import MosaicItem, RectItem, Style
+from dustshot.annotation.render import difference_ratio, render, render_to_file
 
 
 def white(size: tuple[int, int] = (120, 90)) -> Image.Image:

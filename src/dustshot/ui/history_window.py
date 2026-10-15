@@ -67,7 +67,7 @@ class HistoryWindow(Gtk.ApplicationWindow):
         self.history = history or History()
         self.limit = int(limit)
         self.on_close = on_close
-        self.set_title(_("Catchlight 历史"))
+        self.set_title(_("Dustshot 历史"))
         self.set_default_size(900, 640)
 
         header = Gtk.HeaderBar()

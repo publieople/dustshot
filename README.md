@@ -1,11 +1,11 @@
-# Catchlight
+# Dustshot
 
-[![CI](https://github.com/publieople/catchlight/actions/workflows/ci.yml/badge.svg)](https://github.com/publieople/catchlight/actions/workflows/ci.yml)
+[![CI](https://github.com/publieople/dustshot/actions/workflows/ci.yml/badge.svg)](https://github.com/publieople/dustshot/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
 
 A Wayland-native screenshot, annotation and pinboard tool, written in Python with GTK 4.
 
-Catchlight shows a frozen frame of your desktop, lets you grab a region with pixel-accurate
+Dustshot shows a frozen frame of your desktop, lets you grab a region with pixel-accurate
 control, annotate it, and then copy it, save it, OCR it, or pin it as a floating window. It
 speaks wlr-screencopy through `grim` and wlr-layer-shell through `gtk4-layer-shell`, so it works
 on wlroots-style compositors (niri, Hyprland, Sway, ...) without a portal.
@@ -30,16 +30,16 @@ hover toolbar to copy, save, pin again, centre, click through or fade.*
 
 ![Capture history](docs/images/history.png)
 
-*The browsable capture history (`catchlight history --gui`).*
+*The browsable capture history (`dustshot history --gui`).*
 
 ![Sensitive text redaction](docs/images/redact.png)
 
-*`catchlight redact`: OCR finds emails, phone numbers, ID and bank card numbers and API keys,
+*`dustshot redact`: OCR finds emails, phone numbers, ID and bank card numbers and API keys,
 then covers each hit with an opaque block (mosaic and blur are available too).*
 
 ![Tray icon](docs/images/tray.png)
 
-*`catchlight tray`: a StatusNotifierItem icon in the bar; its menu captures a region or the whole
+*`dustshot tray`: a StatusNotifierItem icon in the bar; its menu captures a region or the whole
 output, starts a recording, or opens the capture history.*
 
 ## Features
@@ -56,12 +56,12 @@ output, starts a recording, or opens the capture history.*
   dissolves as soon as fewer than two pins are left in it.
 - **OCR**: tesseract behind a wrapper that keeps word boxes and line grouping, with `eng+chi_sim`
   by default and 2x upscaling preprocess.
-- **QR and barcodes**: `catchlight codes` decodes QR codes and 1D barcodes with `zbarimg`,
+- **QR and barcodes**: `dustshot codes` decodes QR codes and 1D barcodes with `zbarimg`,
   either from a file or from a fresh region capture, as text or JSON.
-- **Sensitive text**: `catchlight redact` runs OCR, finds emails, phone numbers, ID and bank
+- **Sensitive text**: `dustshot redact` runs OCR, finds emails, phone numbers, ID and bank
   card numbers and API keys, then paints opaque blocks over them (solid, mosaic or blur); the
   editor exposes the same pass as a toolbar button.
-- **Scrolling capture**: `catchlight scroll` captures a region again after every page scroll,
+- **Scrolling capture**: `dustshot scroll` captures a region again after every page scroll,
   finds the rows the frames share and stitches them into one long image; scrolling is driven by
   wtype or ydotool, or by hand with `--manual`.
 - **Recording**: region or whole output to MP4 (H.264) through `wf-recorder`, optional GIF
@@ -70,14 +70,14 @@ output, starts a recording, or opens the capture history.*
   (CreateSession / SelectSources / Start / OpenPipeWireRemote) and grabs each shared monitor
   through GStreamer and PipeWire, so region and full captures work on compositors without
   wlr-screencopy too; compositors that only publish DMA-BUF streams are imported through GL.
-- **Tray icon**: `catchlight tray` publishes a StatusNotifierItem icon whose dbusmenu captures a
+- **Tray icon**: `dustshot tray` publishes a StatusNotifierItem icon whose dbusmenu captures a
   region or the whole output, starts a recording, opens the capture history, or quits; every row
   runs the matching CLI command in its own process.
 - **Translations**: interface text goes through gettext; the English catalogue in `po/`
-  compiles into `src/catchlight/locale/` and is picked up from the session language, and
-  `CATCHLIGHT_LANG=en` forces one for a single run.
-- **Extras**: a browsable capture history window (`catchlight history --gui`), `.cln`
-  editor projects, hotkey templates, `catchlight doctor`.
+  compiles into `src/dustshot/locale/` and is picked up from the session language, and
+  `DUSTSHOT_LANG=en` forces one for a single run.
+- **Extras**: a browsable capture history window (`dustshot history --gui`), `.cln`
+  editor projects, hotkey templates, `dustshot doctor`.
 
 ## Requirements
 
@@ -86,7 +86,7 @@ output, starts a recording, or opens the capture history.*
 - optional: `tesseract` + language data for OCR, `wf-recorder` and `ffmpeg` for recording,
   `wl-clipboard` when the GTK clipboard is not available
 - optional: a StatusNotifierWatcher host (KDE Plasma, quickshell / noctalia, waybar, ...) for
-  `catchlight tray`
+  `dustshot tray`
 - optional: for `--backend portal`, the desktop portal itself plus PyGObject, `pipewiresrc` and
   the GL plugins (Arch: `xdg-desktop-portal`, `python-gobject`, `gst-plugin-pipewire`,
   `gst-plugins-base`)
@@ -98,20 +98,20 @@ sudo pacman -S --needed python gtk4 gtk4-layer-shell grim tesseract tesseract-da
 ```
 
 Runtime warning worth knowing: `gtk4-layer-shell` has to be preloaded before `libwayland`, so
-Catchlight re-executes itself with `LD_PRELOAD` set when needed. Nothing is installed or changed
-in your system; setting `CATCHLIGHT_NO_REEXEC=1` disables the re-exec.
+Dustshot re-executes itself with `LD_PRELOAD` set when needed. Nothing is installed or changed
+in your system; setting `DUSTSHOT_NO_REEXEC=1` disables the re-exec.
 
 ## Install
 
 ```fish
-git clone https://github.com/publieople/catchlight
-cd catchlight
+git clone https://github.com/publieople/dustshot
+cd dustshot
 python3 -m venv .venv
 source .venv/bin/activate.fish
 pip install -e '.[gtk]'
 
 # or, with pipx, keeping the GUI dependencies in one place:
-pipx install 'catchlight[gtk] @ git+https://github.com/publieople/catchlight'
+pipx install 'dustshot[gtk] @ git+https://github.com/publieople/dustshot'
 ```
 
 `PyGObject` and `pycairo` are the only Python dependencies of the GUI extra; the editor, the
@@ -123,41 +123,41 @@ renderer, the settings store and the CLI all work without them (that is what CI 
 metadata and icons, so the tool shows up in application menus:
 
 ```fish
-install -Dm644 packaging/io.github.catchlight.desktop ~/.local/share/applications/io.github.catchlight.desktop
-install -Dm644 packaging/io.github.catchlight.metainfo.xml ~/.local/share/metainfo/io.github.catchlight.metainfo.xml
+install -Dm644 packaging/io.github.publieople.Dustshot.desktop ~/.local/share/applications/io.github.publieople.Dustshot.desktop
+install -Dm644 packaging/io.github.publieople.Dustshot.metainfo.xml ~/.local/share/metainfo/io.github.publieople.Dustshot.metainfo.xml
 cp -r packaging/icons/hicolor ~/.local/share/icons/
 ```
 
-A Flatpak manifest lives at `packaging/io.github.catchlight.yml`; it is a starting point and has
+A Flatpak manifest lives at `packaging/io.github.publieople.Dustshot.yml`; it is a starting point and has
 not been built in CI, because capture and overlay need a live Wayland session.
 
 ## Usage
 
 ```text
-catchlight                     # region capture, straight into the editor
-catchlight full                # whole output, into the editor
-catchlight full --backend portal  # same, through the ScreenCast portal
-catchlight capture --no-editor # capture and just save/copy
-catchlight edit IMAGE          # open the editor on an existing file
-catchlight pin IMAGE           # pin an image on the screen
-catchlight ocr [IMAGE]         # recognise text (captures a region when no file is given)
-catchlight codes [IMAGE]       # decode QR codes and barcodes
-catchlight redact [IMAGE]      # find and cover sensitive text
-catchlight scroll --steps 4    # scroll and stitch a long capture
-catchlight tray                  # keep an icon in the system tray
-catchlight record --duration 15 --gif
-catchlight history --limit 10
-catchlight history --gui       # browse the capture history
-catchlight settings --show
-catchlight settings --set capture.image_format=jpg
-catchlight hotkeys --compositor niri
-catchlight doctor              # check dependencies and environment
-catchlight version
+dustshot                     # region capture, straight into the editor
+dustshot full                # whole output, into the editor
+dustshot full --backend portal  # same, through the ScreenCast portal
+dustshot capture --no-editor # capture and just save/copy
+dustshot edit IMAGE          # open the editor on an existing file
+dustshot pin IMAGE           # pin an image on the screen
+dustshot ocr [IMAGE]         # recognise text (captures a region when no file is given)
+dustshot codes [IMAGE]       # decode QR codes and barcodes
+dustshot redact [IMAGE]      # find and cover sensitive text
+dustshot scroll --steps 4    # scroll and stitch a long capture
+dustshot tray                  # keep an icon in the system tray
+dustshot record --duration 15 --gif
+dustshot history --limit 10
+dustshot history --gui       # browse the capture history
+dustshot settings --show
+dustshot settings --set capture.image_format=jpg
+dustshot hotkeys --compositor niri
+dustshot doctor              # check dependencies and environment
+dustshot version
 ```
 
 Useful flags: `--rect 100,100,800,600` to skip the overlay, `--backend auto|grim|portal`,
 `--dir`, `--format`, `--no-copy`, `--delay SECONDS`, `--pin`, `--position X,Y`, `--scale`. Run
-`catchlight COMMAND --help` for the full list.
+`dustshot COMMAND --help` for the full list.
 
 ## Shortcuts
 
@@ -193,50 +193,50 @@ click-through toggle, an opacity slider and the link toggle (联动) that groups
 
 ## Compositor setup
 
-`catchlight hotkeys` prints a ready-to-paste snippet for niri, Hyprland, Sway, GNOME, KDE or any
+`dustshot hotkeys` prints a ready-to-paste snippet for niri, Hyprland, Sway, GNOME, KDE or any
 plain wlroots config. For niri:
 
 ```kdl
 binds {
-    Print { spawn-sh "catchlight region"; }
-    Mod+Print { spawn-sh "catchlight full"; }
+    Print { spawn-sh "dustshot region"; }
+    Mod+Print { spawn-sh "dustshot full"; }
 }
 ```
 
 For Hyprland:
 
 ```text
-bind = , Print, exec, catchlight region
-bind = SUPER, Print, exec, catchlight full
+bind = , Print, exec, dustshot region
+bind = SUPER, Print, exec, dustshot full
 ```
 
 ## Configuration
 
-Settings live in `~/.config/catchlight/config.json` and are written by `catchlight settings
+Settings live in `~/.config/dustshot/config.json` and are written by `dustshot settings
 --set SECTION.FIELD=VALUE`. The capturable sections are `capture`, `annotation`, `pin`, `ocr`
-and `recording`; capture history is kept in `~/.local/share/catchlight/history.json` and
+and `recording`; capture history is kept in `~/.local/share/dustshot/history.json` and
 screenshots default to `~/Pictures/Screenshots`.
 
 ## Translations
 
-Interface text is wrapped in `_()` and resolved through gettext (domain `catchlight`). The
+Interface text is wrapped in `_()` and resolved through gettext (domain `dustshot`). The
 catalogues live in `po/` and are compiled into
-`src/catchlight/locale/<language>/LC_MESSAGES/catchlight.mo`, which is what ships in the
+`src/dustshot/locale/<language>/LC_MESSAGES/dustshot.mo`, which is what ships in the
 package; without a catalogue every lookup returns the original Chinese string.
 
 ```sh
-CATCHLIGHT_LANG=en catchlight full      # force a language for one run
-python3 -m catchlight.i18n available    # list the compiled catalogues
-python3 -m catchlight.i18n compile      # rebuild every .mo from po/*.po
+DUSTSHOT_LANG=en dustshot full      # force a language for one run
+python3 -m dustshot.i18n available    # list the compiled catalogues
+python3 -m dustshot.i18n compile      # rebuild every .mo from po/*.po
 
 # refresh the template after adding or changing strings
 xgettext --language=Python --keyword=_ --keyword=ngettext:1,2 --from-code=UTF-8 \
-    --package-name=catchlight --add-comments=TRANSLATORS \
-    -o po/catchlight.pot $(find src -name '*.py' | sort)
+    --package-name=dustshot --add-comments=TRANSLATORS \
+    -o po/dustshot.pot $(find src -name '*.py' | sort)
 ```
 
-`CATCHLIGHT_LANG` (a `:` or `,` separated list, highest priority first) overrides the session
-language, and `CATCHLIGHT_LOCALEDIR` points the lookup at another directory.
+`DUSTSHOT_LANG` (a `:` or `,` separated list, highest priority first) overrides the session
+language, and `DUSTSHOT_LOCALEDIR` points the lookup at another directory.
 
 ## Development
 
@@ -248,7 +248,7 @@ ruff check src tests
 ruff format --check src tests
 ```
 
-The test suite deliberately avoids GTK: everything under `catchlight/` except `catchlight.ui` is
+The test suite deliberately avoids GTK: everything under `dustshot/` except `dustshot.ui` is
 importable headless, and the renderer is Pillow based, so CI runs on plain Ubuntu images. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the module map and
 [docs/ROADMAP.md](docs/ROADMAP.md) for milestone status.

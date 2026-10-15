@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from catchlight import cli
-from catchlight.config import Settings
+from dustshot import cli
+from dustshot.config import Settings
 
 
 def test_parser_lists_commands() -> None:
@@ -30,13 +30,13 @@ def test_parser_lists_commands() -> None:
 
 def test_version_command(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["version"]) == 0
-    assert "catchlight" in capsys.readouterr().out
+    assert "dustshot" in capsys.readouterr().out
 
 
 def test_hotkeys_command(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["hotkeys", "--compositor", "niri"]) == 0
     output = capsys.readouterr().out
-    assert "catchlight" in output
+    assert "dustshot" in output
     assert "spawn" in output
 
 
@@ -85,7 +85,7 @@ def test_codes_command_prints_symbols(
 ) -> None:
     from PIL import Image
 
-    from catchlight import barcode
+    from dustshot import barcode
 
     monkeypatch.setattr(cli, "load_image", lambda path: Image.new("RGB", (8, 8)))
     monkeypatch.setattr(
@@ -103,7 +103,7 @@ def test_codes_command_reports_empty(
 ) -> None:
     from PIL import Image
 
-    from catchlight import barcode
+    from dustshot import barcode
 
     monkeypatch.setattr(cli, "load_image", lambda path: Image.new("RGB", (8, 8)))
     monkeypatch.setattr(barcode, "decode", lambda image, **kwargs: [])
@@ -126,7 +126,7 @@ def test_redact_command_masks_matches(
 ) -> None:
     from PIL import Image
 
-    from catchlight import ocr
+    from dustshot import ocr
 
     monkeypatch.setattr(cli, "load_image", lambda path: Image.new("RGB", (60, 20), "white"))
     monkeypatch.setattr(
@@ -179,7 +179,7 @@ def test_scroll_command_stitches_the_frames(
 ) -> None:
     from PIL import Image, ImageDraw
 
-    from catchlight import scroll
+    from dustshot import scroll
 
     page = Image.new("RGB", (60, 300), "white")
     draw = ImageDraw.Draw(page)
@@ -221,8 +221,8 @@ def test_parser_accepts_a_capture_backend() -> None:
 
 
 def test_capture_backend_prefers_grim_unless_asked(monkeypatch: pytest.MonkeyPatch) -> None:
-    from catchlight.capture import portal, screencopy
-    from catchlight.capture.screencopy import CaptureError
+    from dustshot.capture import portal, screencopy
+    from dustshot.capture.screencopy import CaptureError
 
     monkeypatch.setattr(screencopy, "have_grim", lambda: True)
     monkeypatch.setattr(portal, "have_portal", lambda: True)
@@ -236,7 +236,7 @@ def test_capture_backend_prefers_grim_unless_asked(monkeypatch: pytest.MonkeyPat
 
 
 def test_capture_backend_uses_the_portal_inside_flatpak(monkeypatch: pytest.MonkeyPatch) -> None:
-    from catchlight.capture import base, portal, screencopy
+    from dustshot.capture import base, portal, screencopy
 
     monkeypatch.setattr(screencopy, "have_grim", lambda: True)
     monkeypatch.setattr(portal, "have_portal", lambda: True)
@@ -249,7 +249,7 @@ def test_capture_backend_uses_the_portal_inside_flatpak(monkeypatch: pytest.Monk
 def test_capture_full_dispatches_to_the_requested_backend(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from catchlight.capture import portal, screencopy
+    from dustshot.capture import portal, screencopy
 
     calls: list[str] = []
     monkeypatch.setattr(screencopy, "have_grim", lambda: True)

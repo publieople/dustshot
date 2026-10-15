@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from PIL import Image
 
-from catchlight.annotation.document import Document
-from catchlight.annotation.items import RectItem, SerialItem, Style
-from catchlight.config import AnnotationSettings
+from dustshot.annotation.document import Document
+from dustshot.annotation.items import RectItem, SerialItem, Style
+from dustshot.config import AnnotationSettings
 
 
 def make_document() -> Document:

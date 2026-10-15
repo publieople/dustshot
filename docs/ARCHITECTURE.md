@@ -1,40 +1,40 @@
 # Architecture
 
-Catchlight is split so that everything except `catchlight.ui` is importable without GTK. That is
+Dustshot is split so that everything except `dustshot.ui` is importable without GTK. That is
 what lets the test suite and CI run headless.
 
 | Module | Responsibility |
 | --- | --- |
-| `catchlight/config.py` | `Settings` dataclasses, palette defaults, JSON store under XDG dirs |
-| `catchlight/capture/base.py` | `Geometry`, `OutputInfo`, `Frame`; logical/physical scale maths |
-| `catchlight/capture/screencopy.py` | output discovery (`niri msg`), frames (`grim`), region capture |
-| `catchlight/capture/portal.py` | ScreenCast portal client and PipeWire frame grabbing |
-| `catchlight/selection.py` | the region state machine (new / move / resize, handles, clamping) |
-| `catchlight/annotation/items.py` | item model, style, registry, JSON round-trip |
-| `catchlight/annotation/render.py` | the Pillow renderer shared by GUI and tests |
-| `catchlight/annotation/document.py` | one edited image: items, undo stack, hit testing, `.cln` |
-| `catchlight/annotation/fonts.py` | `fc-match` font lookup with CJK fallbacks |
-| `catchlight/output.py` | naming, unique paths, format handling, save directory resolution |
-| `catchlight/clipboard.py` | `Gdk.Clipboard` when GTK is up, `wl-copy` / `wl-paste` otherwise |
-| `catchlight/history.py` | the JSON capture index |
-| `catchlight/snap.py` | pure geometry helpers for edge and centre snapping |
-| `catchlight/barcode.py` | `zbarimg` wrapper: output parsing, file and PIL-image decoding |
-| `catchlight/ocr.py` | tesseract wrapper, TSV parsing, word grouping |
-| `catchlight/redact.py` | sensitive text patterns, OCR word box grouping, masking items |
-| `catchlight/scroll.py` | scrolling capture: row signatures, overlap detection, stitching |
-| `catchlight/pinboard.py` | pin groups: shared move and zoom model |
-| `catchlight/tray.py` | tray menu model and the SNI icon rendering |
-| `catchlight/record.py` | `wf-recorder` / `gpu-screen-recorder` backends, GIF conversion |
-| `catchlight/ui/layer.py` | gtk4-layer-shell setup plus the `LD_PRELOAD` re-exec dance |
-| `catchlight/ui/selector.py` | the full-screen region overlay |
-| `catchlight/ui/canvas.py` | the annotation canvas (Pillow render + Cairo blit, live preview) |
-| `catchlight/ui/editor.py` | the editor window: toolbar, palette, actions, OCR panel |
-| `catchlight/ui/pin.py` | the floating pinned image (snapping, click-through, opacity, link toggle) |
-| `catchlight/ui/tray.py` | StatusNotifierItem server and dbusmenu |
-| `catchlight/ui/history_window.py` | the browsable capture history window |
-| `catchlight/ui/app.py` | `Gtk.Application` that owns the windows for one CLI invocation |
-| `catchlight/i18n.py` | gettext setup, the `_` helper and the compiled catalogues |
-| `catchlight/cli.py` | argparse front end for every command |
+| `dustshot/config.py` | `Settings` dataclasses, palette defaults, JSON store under XDG dirs |
+| `dustshot/capture/base.py` | `Geometry`, `OutputInfo`, `Frame`; logical/physical scale maths |
+| `dustshot/capture/screencopy.py` | output discovery (`niri msg`), frames (`grim`), region capture |
+| `dustshot/capture/portal.py` | ScreenCast portal client and PipeWire frame grabbing |
+| `dustshot/selection.py` | the region state machine (new / move / resize, handles, clamping) |
+| `dustshot/annotation/items.py` | item model, style, registry, JSON round-trip |
+| `dustshot/annotation/render.py` | the Pillow renderer shared by GUI and tests |
+| `dustshot/annotation/document.py` | one edited image: items, undo stack, hit testing, `.cln` |
+| `dustshot/annotation/fonts.py` | `fc-match` font lookup with CJK fallbacks |
+| `dustshot/output.py` | naming, unique paths, format handling, save directory resolution |
+| `dustshot/clipboard.py` | `Gdk.Clipboard` when GTK is up, `wl-copy` / `wl-paste` otherwise |
+| `dustshot/history.py` | the JSON capture index |
+| `dustshot/snap.py` | pure geometry helpers for edge and centre snapping |
+| `dustshot/barcode.py` | `zbarimg` wrapper: output parsing, file and PIL-image decoding |
+| `dustshot/ocr.py` | tesseract wrapper, TSV parsing, word grouping |
+| `dustshot/redact.py` | sensitive text patterns, OCR word box grouping, masking items |
+| `dustshot/scroll.py` | scrolling capture: row signatures, overlap detection, stitching |
+| `dustshot/pinboard.py` | pin groups: shared move and zoom model |
+| `dustshot/tray.py` | tray menu model and the SNI icon rendering |
+| `dustshot/record.py` | `wf-recorder` / `gpu-screen-recorder` backends, GIF conversion |
+| `dustshot/ui/layer.py` | gtk4-layer-shell setup plus the `LD_PRELOAD` re-exec dance |
+| `dustshot/ui/selector.py` | the full-screen region overlay |
+| `dustshot/ui/canvas.py` | the annotation canvas (Pillow render + Cairo blit, live preview) |
+| `dustshot/ui/editor.py` | the editor window: toolbar, palette, actions, OCR panel |
+| `dustshot/ui/pin.py` | the floating pinned image (snapping, click-through, opacity, link toggle) |
+| `dustshot/ui/tray.py` | StatusNotifierItem server and dbusmenu |
+| `dustshot/ui/history_window.py` | the browsable capture history window |
+| `dustshot/ui/app.py` | `Gtk.Application` that owns the windows for one CLI invocation |
+| `dustshot/i18n.py` | gettext setup, the `_` helper and the compiled catalogues |
+| `dustshot/cli.py` | argparse front end for every command |
 
 ## Two implementation notes worth knowing
 

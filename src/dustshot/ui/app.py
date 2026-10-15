@@ -1,4 +1,4 @@
-"""Gtk.Application used by every graphical Catchlight entry point."""
+"""Gtk.Application used by every graphical Dustshot entry point."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gio, GLib, Gtk
 from PIL import Image
 
-from .. import clipboard, output
+from .. import APP_ID, clipboard, output
 from ..annotation.document import Document
 from ..config import Settings
 from ..history import History
@@ -53,13 +53,13 @@ def load_image(path: str | Path) -> Image.Image:
 class RecordControlWindow(Gtk.ApplicationWindow):
     """Small always-available window that stops the recording."""
 
-    def __init__(self, app: CatchlightApp, recorder: Recorder, options: dict[str, Any]) -> None:
+    def __init__(self, app: DustshotApp, recorder: Recorder, options: dict[str, Any]) -> None:
         super().__init__(application=app)
         self.app = app
         self.recorder = recorder
         self.options = options
         self.started = time.time()
-        self.set_title(_("Catchlight 录制"))
+        self.set_title(_("Dustshot 录制"))
         self.set_default_size(320, 120)
 
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -108,7 +108,7 @@ class RecordControlWindow(Gtk.ApplicationWindow):
         self.close()
 
 
-class CatchlightApp(Gtk.Application):
+class DustshotApp(Gtk.Application):
     """Owns the windows for one CLI invocation."""
 
     def __init__(
@@ -119,7 +119,7 @@ class CatchlightApp(Gtk.Application):
         options: dict[str, Any] | None = None,
         region: Any = None,
     ) -> None:
-        super().__init__(application_id="io.github.catchlight.gui", flags=Gio.ApplicationFlags.NON_UNIQUE)
+        super().__init__(application_id=APP_ID + ".gui", flags=Gio.ApplicationFlags.NON_UNIQUE)
         self.settings = settings
         self.action = action
         self.images = list(images or [])
@@ -340,7 +340,7 @@ def run_gui(
 ) -> int:
     """Start the GUI for one action and return a process exit code."""
 
-    app = CatchlightApp(settings, action, images=images, options=options, region=region)
+    app = DustshotApp(settings, action, images=images, options=options, region=region)
     status = app.run([])
     if app.recording_error:
         print(

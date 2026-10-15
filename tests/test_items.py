@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from catchlight.annotation.items import (
+from dustshot.annotation.items import (
     ArrowItem,
     EllipseItem,
     HighlighterItem,
@@ -30,7 +30,7 @@ def all_items() -> list[Item]:
         ArrowItem(x1=0, y1=0, x2=80, y2=20),
         PencilItem(points=[(0, 0), (5, 5), (10, 0)]),
         HighlighterItem(points=[(0, 0), (30, 30)]),
-        TextItem(x=5, y=5, text="你好 Catchlight", size=18, bold=True),
+        TextItem(x=5, y=5, text="你好 Dustshot", size=18, bold=True),
         SerialItem(x=100, y=100, number=3, size=22),
         MosaicItem(x=20, y=20, width=60, height=60, mode="blur", blur_radius=8),
     ]

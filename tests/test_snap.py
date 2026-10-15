@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from catchlight.capture.base import Geometry
-from catchlight.snap import centre_position, snap_position, snap_value
+from dustshot.capture.base import Geometry
+from dustshot.snap import centre_position, snap_position, snap_value
 
 
 def test_snap_value_picks_the_nearest_target() -> None:

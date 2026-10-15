@@ -12,8 +12,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from catchlight import i18n
-from catchlight.config import SettingsStore
+from dustshot import i18n
+from dustshot.config import SettingsStore
 
 
 @pytest.fixture(autouse=True)

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from catchlight.capture.base import Geometry
-from catchlight.selection import MIN_SIZE, SelectionMode, SelectionState
+from dustshot.capture.base import Geometry
+from dustshot.selection import MIN_SIZE, SelectionMode, SelectionState
 
 
 def make_state() -> SelectionState:

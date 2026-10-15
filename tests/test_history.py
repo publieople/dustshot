@@ -7,7 +7,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from catchlight.history import MAX_ENTRIES, History
+from dustshot.history import MAX_ENTRIES, History
 
 
 def make_history(tmp_path: Path) -> History:

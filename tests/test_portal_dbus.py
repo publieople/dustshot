@@ -21,7 +21,7 @@ gi = pytest.importorskip("gi")
 gi.require_version("GLib", "2.0")
 from gi.repository import Gio, GLib
 
-from catchlight.capture import portal
+from dustshot.capture import portal
 
 pytestmark = pytest.mark.skipif(not os.environ.get("DBUS_SESSION_BUS_ADDRESS"), reason="需要一个会话总线")
 

@@ -7,7 +7,7 @@ import shutil
 import pytest
 from PIL import Image
 
-from catchlight import ocr
+from dustshot import ocr
 
 TSV = "\t".join(
     [

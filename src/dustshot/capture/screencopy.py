@@ -30,11 +30,11 @@ class CaptureError(RuntimeError):
 
 
 def grim_path() -> str:
-    return os.environ.get("CATCHLIGHT_GRIM", "grim")
+    return os.environ.get("DUSTSHOT_GRIM", "grim")
 
 
 def niri_path() -> str:
-    return os.environ.get("CATCHLIGHT_NIRI", "niri")
+    return os.environ.get("DUSTSHOT_NIRI", "niri")
 
 
 def have_grim() -> bool:
@@ -199,7 +199,7 @@ def _decode_png(payload: bytes) -> Image.Image:
 
 def _grim_stdout(args: Sequence[str]) -> Image.Image:
     if not have_grim():
-        raise CaptureError("grim is not installed; install it or set CATCHLIGHT_GRIM")
+        raise CaptureError("grim is not installed; install it or set DUSTSHOT_GRIM")
     result = _run([grim_path(), *args, "-"])
     if result.returncode != 0:
         message = result.stderr.decode("utf-8", "replace").strip()

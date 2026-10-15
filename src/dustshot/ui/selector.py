@@ -19,6 +19,7 @@ gi.require_version("PangoCairo", "1.0")
 from gi.repository import Gdk, Gio, GLib, Gtk, Pango, PangoCairo
 from PIL import Image
 
+from .. import APP_ID
 from ..capture.base import Frame, Geometry, OutputInfo
 from ..capture.screencopy import CaptureError, capture_output, list_outputs
 from ..i18n import _
@@ -57,7 +58,7 @@ class OutputOverlay(Gtk.ApplicationWindow):
         self._backdrop_cache = None
         self._backdrop_size = (0, 0)
 
-        self.set_title("Catchlight selection")
+        self.set_title("Dustshot selection")
         # A layer surface must stay resizable: turning that off makes GTK keep
         # its default 200x200 size instead of the compositor proposed one.
         self.area = self._build_area()
@@ -415,7 +416,7 @@ class RegionSelector:
     def __init__(self, settings=None) -> None:
         self.settings = settings
         self.app = Gtk.Application(
-            application_id="io.github.catchlight.selector",
+            application_id=APP_ID + ".selector",
             flags=Gio.ApplicationFlags.NON_UNIQUE,
         )
         self.app.connect("activate", self._on_activate)

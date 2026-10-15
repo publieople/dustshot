@@ -1,4 +1,4 @@
-"""Annotation canvas widget (GTK4 + Cairo) used by the Catchlight editor."""
+"""Annotation canvas widget (GTK4 + Cairo) used by the Dustshot editor."""
 
 from __future__ import annotations
 

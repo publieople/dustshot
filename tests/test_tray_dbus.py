@@ -23,7 +23,7 @@ gi = pytest.importorskip("gi")
 gi.require_version("GLib", "2.0")
 from gi.repository import Gio, GLib
 
-from catchlight import tray as model
+from dustshot import tray as model
 
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = Path(__file__).with_name("tray_process.py")
@@ -159,7 +159,7 @@ def test_item_registers_itself_with_the_watcher(watcher, bus, item):
 
 
 def test_item_publishes_the_sni_properties(watcher, bus, item):
-    assert _property(bus, item.name, model.ITEM_PATH, "org.kde.StatusNotifierItem", "Id") == "catchlight"
+    assert _property(bus, item.name, model.ITEM_PATH, "org.kde.StatusNotifierItem", "Id") == "dustshot"
     assert _property(bus, item.name, model.ITEM_PATH, "org.kde.StatusNotifierItem", "Title") == model.TITLE
     assert _property(bus, item.name, model.ITEM_PATH, "org.kde.StatusNotifierItem", "Status") == "Active"
     assert (

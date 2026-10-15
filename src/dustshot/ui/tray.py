@@ -1,4 +1,4 @@
-"""A StatusNotifierItem tray icon for Catchlight.
+"""A StatusNotifierItem tray icon for Dustshot.
 
 The icon is published on the session bus for the StatusNotifierWatcher host
 (quickshell / noctalia, KDE, waybar ...) and its menu speaks
@@ -230,7 +230,7 @@ class TrayItem:
         if name == "Category":
             return GLib.Variant("s", "ApplicationStatus")
         if name == "Id":
-            return GLib.Variant("s", "catchlight")
+            return GLib.Variant("s", "dustshot")
         if name == "Title":
             return GLib.Variant("s", model.TITLE)
         if name == "Status":
@@ -347,7 +347,7 @@ class TrayItem:
             self._spawn(command)
 
     def _spawn_command(self, command: tuple[str, ...]) -> None:
-        subprocess.Popen([self._application, "-m", "catchlight.cli", *command], start_new_session=True)
+        subprocess.Popen([self._application, "-m", "dustshot.cli", *command], start_new_session=True)
 
     def close(self) -> None:
         if self._connection is None:

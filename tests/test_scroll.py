@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from PIL import Image, ImageChops, ImageDraw
 
-from catchlight import scroll
+from dustshot import scroll
 
 
 def document(height: int = 400, width: int = 120) -> Image.Image:

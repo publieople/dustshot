@@ -37,7 +37,7 @@ def init_window(
     margins: tuple[int, int, int, int] = (0, 0, 0, 0),
     exclusive_zone: int = -1,
     keyboard: str = "exclusive",
-    namespace: str = "catchlight",
+    namespace: str = "dustshot",
 ) -> bool:
     """Configure a window as a layer surface.
 
@@ -188,7 +188,7 @@ def ensure_preload() -> bool:
     import os
     import sys
 
-    if preload_active() or os.environ.get("CATCHLIGHT_NO_REEXEC") == "1":
+    if preload_active() or os.environ.get("DUSTSHOT_NO_REEXEC") == "1":
         return False
     if not available():
         return False
@@ -197,6 +197,6 @@ def ensure_preload() -> bool:
         return False
     environment = dict(os.environ)
     environment["LD_PRELOAD"] = (path + " " + environment.get("LD_PRELOAD", "")).strip()
-    environment["CATCHLIGHT_PRELOADED"] = "1"
+    environment["DUSTSHOT_PRELOADED"] = "1"
     os.execve(sys.executable, reexec_argv(), environment)
     return True  # pragma: no cover - exec never returns

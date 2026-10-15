@@ -1,25 +1,25 @@
-# Flatpak manifest for Catchlight.
+# Flatpak manifest for Dustshot.
 #
 # Build it from the repository root with:
 #
-#   flatpak-builder --user --install --force-clean build-dir packaging/io.github.catchlight.yml
-#   flatpak run io.github.catchlight doctor
+#   flatpak-builder --user --install --force-clean build-dir packaging/io.github.publieople.Dustshot.yml
+#   flatpak run io.github.publieople.Dustshot doctor
 #
 # The manifest bundles the GTK 4 layer shell, grim and wl-clipboard, and installs Pillow and
-# catchlight itself with pip; the GNOME runtime already ships GTK 4, PyGObject and GStreamer.
+# dustshot itself with pip; the GNOME runtime already ships GTK 4, PyGObject and GStreamer.
 #
 # A sandboxed client connects through a Wayland security context, and compositors that support
 # one (niri does) hide wlr-screencopy and wlr-layer-shell from it: screenshots then have to come
 # from the ScreenCast portal, and the overlay and pins fall back to ordinary windows. `--backend
-# auto` therefore picks the portal inside a sandbox, and `catchlight doctor` says so.
+# auto` therefore picks the portal inside a sandbox, and `dustshot doctor` says so.
 #
 # The optional helpers are still run from the host and are reported as missing by
-# `catchlight doctor`: tesseract (OCR), zbar (barcodes) and wf-recorder/ffmpeg (recording).
-app-id: io.github.catchlight
+# `dustshot doctor`: tesseract (OCR), zbar (barcodes) and wf-recorder/ffmpeg (recording).
+app-id: io.github.publieople.Dustshot
 runtime: org.gnome.Platform
 runtime-version: '51'
 sdk: org.gnome.Sdk
-command: catchlight
+command: dustshot
 # The catalogue is composed on the build server (Flathub) and by `appstreamcli validate` in
 # this repository; composing it here needs the network to mirror the remote screenshots,
 # which the build sandbox does not have.
@@ -31,8 +31,8 @@ finish-args:
   - --socket=fallback-x11
   - --device=dri
   - --filesystem=xdg-pictures
-  - --filesystem=xdg-config/catchlight:create
-  - --filesystem=xdg-data/catchlight:create
+  - --filesystem=xdg-config/dustshot:create
+  - --filesystem=xdg-data/dustshot:create
   # The ScreenCast portal delivers frames over PipeWire; without this the socket is invisible.
   - --filesystem=xdg-run/pipewire-0
   - --talk-name=org.freedesktop.portal.Desktop
@@ -80,7 +80,7 @@ modules:
         url: https://github.com/bugaevc/wl-clipboard.git
         tag: v2.3.0
 
-  - name: catchlight
+  - name: dustshot
     buildsystem: simple
     build-options:
       build-args:
@@ -88,12 +88,12 @@ modules:
     build-commands:
       - pip3 install --no-cache-dir --no-build-isolation --prefix=${FLATPAK_DEST} Pillow
       - pip3 install --no-cache-dir --no-build-isolation --prefix=${FLATPAK_DEST} .
-      - install -Dm644 packaging/io.github.catchlight.desktop ${FLATPAK_DEST}/share/applications/io.github.catchlight.desktop
-      - install -Dm644 packaging/io.github.catchlight.metainfo.xml ${FLATPAK_DEST}/share/metainfo/io.github.catchlight.metainfo.xml
-      - install -Dm644 packaging/icons/hicolor/256x256/apps/io.github.catchlight.png ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/io.github.catchlight.png
-      - install -Dm644 packaging/icons/hicolor/128x128/apps/io.github.catchlight.png ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/io.github.catchlight.png
-      - install -Dm644 packaging/icons/hicolor/64x64/apps/io.github.catchlight.png ${FLATPAK_DEST}/share/icons/hicolor/64x64/apps/io.github.catchlight.png
-      - install -Dm644 packaging/icons/hicolor/48x48/apps/io.github.catchlight.png ${FLATPAK_DEST}/share/icons/hicolor/48x48/apps/io.github.catchlight.png
+      - install -Dm644 packaging/io.github.publieople.Dustshot.desktop ${FLATPAK_DEST}/share/applications/io.github.publieople.Dustshot.desktop
+      - install -Dm644 packaging/io.github.publieople.Dustshot.metainfo.xml ${FLATPAK_DEST}/share/metainfo/io.github.publieople.Dustshot.metainfo.xml
+      - install -Dm644 packaging/icons/hicolor/256x256/apps/io.github.publieople.Dustshot.png ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/io.github.publieople.Dustshot.png
+      - install -Dm644 packaging/icons/hicolor/128x128/apps/io.github.publieople.Dustshot.png ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/io.github.publieople.Dustshot.png
+      - install -Dm644 packaging/icons/hicolor/64x64/apps/io.github.publieople.Dustshot.png ${FLATPAK_DEST}/share/icons/hicolor/64x64/apps/io.github.publieople.Dustshot.png
+      - install -Dm644 packaging/icons/hicolor/48x48/apps/io.github.publieople.Dustshot.png ${FLATPAK_DEST}/share/icons/hicolor/48x48/apps/io.github.publieople.Dustshot.png
     sources:
       - type: dir
         path: ..

@@ -92,7 +92,7 @@ def decode_file(
 def decode(image: Image.Image, command: str = DEFAULT_COMMAND, timeout: int = 60) -> list[Code]:
     """Decode every symbol in a Pillow image."""
 
-    with tempfile.TemporaryDirectory(prefix="catchlight-barcode-") as directory:
+    with tempfile.TemporaryDirectory(prefix="dustshot-barcode-") as directory:
         target = Path(directory) / "input.png"
         image.convert("RGB").save(target)
         return decode_file(target, command=command, timeout=timeout)

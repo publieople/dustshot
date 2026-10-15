@@ -104,7 +104,7 @@ def run_watcher() -> int:
 
 def run_item(log_path: str) -> int:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-    from catchlight.ui.tray import TrayError, TrayItem
+    from dustshot.ui.tray import TrayError, TrayItem
 
     log = Path(log_path)
     log.write_text("")

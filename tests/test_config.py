@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from catchlight.config import SettingsStore
+from dustshot.config import SettingsStore
 
 
 def test_defaults(store: SettingsStore) -> None:

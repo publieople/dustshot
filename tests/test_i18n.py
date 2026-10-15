@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from catchlight import i18n
+from dustshot import i18n
 
 
 def parse_catalogue(path: Path) -> dict[str, tuple[str, bool]]:
@@ -95,15 +95,15 @@ def test_requested_languages_splits_the_override(monkeypatch):
 def test_locale_dir_follows_the_override(monkeypatch, tmp_path):
     monkeypatch.setenv(i18n.LOCALE_VARIABLE, str(tmp_path))
     assert i18n.locale_dir() == tmp_path
-    assert i18n.catalogue_path("en") == tmp_path / "en" / "LC_MESSAGES" / "catchlight.mo"
+    assert i18n.catalogue_path("en") == tmp_path / "en" / "LC_MESSAGES" / "dustshot.mo"
 
 
 def test_catalogue_path_defaults_to_the_package_directory():
-    assert i18n.catalogue_path("en") == i18n.LOCALE_DIR / "en" / "LC_MESSAGES" / "catchlight.mo"
+    assert i18n.catalogue_path("en") == i18n.LOCALE_DIR / "en" / "LC_MESSAGES" / "dustshot.mo"
 
 
 def test_the_template_and_the_catalogue_agree():
-    template = parse_catalogue(i18n.PO_DIR / "catchlight.pot")
+    template = parse_catalogue(i18n.PO_DIR / "dustshot.pot")
     catalogue = parse_catalogue(i18n.PO_DIR / "en.po")
     assert set(template) - {""} == set(catalogue) - {""}
 
@@ -117,7 +117,7 @@ def test_every_message_is_translated():
 
 
 def test_the_template_covers_the_interface():
-    template = parse_catalogue(i18n.PO_DIR / "catchlight.pot")
+    template = parse_catalogue(i18n.PO_DIR / "dustshot.pot")
     assert len(template) > 200
     assert "已保存：{path}" in template
 
@@ -126,7 +126,7 @@ def test_compile_catalogs_writes_a_mo_file(tmp_path):
     if shutil.which("msgfmt") is None:
         pytest.skip("msgfmt is not installed")
     written = i18n.compile_catalogs(podir=i18n.PO_DIR, localedir=tmp_path)
-    assert written == [tmp_path / "en" / "LC_MESSAGES" / "catchlight.mo"]
+    assert written == [tmp_path / "en" / "LC_MESSAGES" / "dustshot.mo"]
     assert written[0].stat().st_size > 0
 
 
@@ -137,7 +137,7 @@ def test_main_lists_and_compiles(capsys, tmp_path, monkeypatch):
     assert "en" in capsys.readouterr().out
     monkeypatch.setenv(i18n.LOCALE_VARIABLE, str(tmp_path))
     assert i18n._main(["compile"]) == 0
-    assert (tmp_path / "en" / "LC_MESSAGES" / "catchlight.mo").exists()
+    assert (tmp_path / "en" / "LC_MESSAGES" / "dustshot.mo").exists()
 
 
 def test_compile_catalogs_reports_a_missing_msgfmt(monkeypatch):
