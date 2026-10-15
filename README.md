@@ -37,6 +37,11 @@ hover toolbar to copy, save, pin again, centre, click through or fade.*
 *`catchlight redact`: OCR finds emails, phone numbers, ID and bank card numbers and API keys,
 then covers each hit with an opaque block (mosaic and blur are available too).*
 
+![Tray icon](docs/images/tray.png)
+
+*`catchlight tray`: a StatusNotifierItem icon in the bar; its menu captures a region or the whole
+output, starts a recording, or opens the capture history.*
+
 ## Features
 
 - **Region capture** on a frozen backdrop: per-output full-screen overlay, dimmed outside area,
@@ -61,6 +66,9 @@ then covers each hit with an opaque block (mosaic and blur are available too).*
   wtype or ydotool, or by hand with `--manual`.
 - **Recording**: region or whole output to MP4 (H.264) through `wf-recorder`, optional GIF
   conversion through ffmpeg, wall-clock limit, a small stop-recording window.
+- **Tray icon**: `catchlight tray` publishes a StatusNotifierItem icon whose dbusmenu captures a
+  region or the whole output, starts a recording, opens the capture history, or quits; every row
+  runs the matching CLI command in its own process.
 - **Extras**: a browsable capture history window (`catchlight history --gui`), `.cln`
   editor projects, hotkey templates, `catchlight doctor`.
 
@@ -70,6 +78,8 @@ then covers each hit with an opaque block (mosaic and blur are available too).*
 - `grim` (capture) and a compositor that implements wlr-screencopy
 - optional: `tesseract` + language data for OCR, `wf-recorder` and `ffmpeg` for recording,
   `wl-clipboard` when the GTK clipboard is not available
+- optional: a StatusNotifierWatcher host (KDE Plasma, quickshell / noctalia, waybar, ...) for
+  `catchlight tray`
 
 On Arch / CachyOS:
 
@@ -123,6 +133,7 @@ catchlight ocr [IMAGE]         # recognise text (captures a region when no file 
 catchlight codes [IMAGE]       # decode QR codes and barcodes
 catchlight redact [IMAGE]      # find and cover sensitive text
 catchlight scroll --steps 4    # scroll and stitch a long capture
+catchlight tray                  # keep an icon in the system tray
 catchlight record --duration 15 --gif
 catchlight history --limit 10
 catchlight history --gui       # browse the capture history

@@ -32,6 +32,7 @@ EPILOG = """常用示例：
     catchlight redact                 框选并自动遮住敏感信息
     catchlight scroll --steps 4         滚动截图并拼接成长图
     catchlight history --gui           浏览截图历史
+    catchlight tray                   在系统托盘里驻留一个图标
     catchlight doctor                  检查运行环境
 """
 
@@ -486,6 +487,12 @@ def command_history(args: argparse.Namespace, settings: Settings, store: Setting
     return 0
 
 
+def command_tray(args: argparse.Namespace, settings: Settings, store: SettingsStore) -> int:
+    from .ui.tray import run_tray
+
+    return run_tray(settings)
+
+
 def coerce(current: Any, raw: str) -> Any:
     if isinstance(current, bool):
         return raw.strip().lower() in {"1", "true", "yes", "on", "y"}
@@ -696,6 +703,7 @@ COMMANDS = {
     "codes": command_codes,
     "redact": command_redact,
     "scroll": command_scroll,
+    "tray": command_tray,
     "history": command_history,
     "settings": command_settings,
     "hotkeys": command_hotkeys,
@@ -825,6 +833,8 @@ def build_parser() -> argparse.ArgumentParser:
     redact_parser.add_argument("--output", metavar="PATH", help="输出文件路径")
     redact_parser.add_argument("--copy", action="store_true", help="把脱敏后的图片复制到剪贴板")
     redact_parser.add_argument("--json", action="store_true", help="以 JSON 输出命中的内容")
+
+    subparsers.add_parser("tray", help="在系统托盘里驻留一个图标")
 
     history = subparsers.add_parser("history", help="查看截图历史")
     history.add_argument("--limit", type=int, default=20, help="显示条数（默认 20）")

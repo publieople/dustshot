@@ -67,8 +67,11 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
 - done: desktop integration assets in `packaging/` — a desktop entry with region / full /
   record / OCR / history actions, AppStream metadata (validated with appstreamcli) and icons,
   plus a starting Flatpak manifest that CI cannot build because capture needs a live session.
-- planned: tray icon, a ScreenCast-portal backend for compositors without wlr-screencopy,
-  a tested Flatpak build, translations.
+- done: `catchlight tray` publishes a StatusNotifierItem icon with a dbusmenu (region / full
+  capture, recording, history, quit) and spawns the matching CLI command per row; the menu model and
+  the icon are unit-tested and the D-Bus server has cross-process tests (`dbus-run-session`).
+- planned: a ScreenCast-portal backend for compositors without wlr-screencopy, a tested Flatpak
+  build, translations.
 
 ## Deliberately out of scope
 
