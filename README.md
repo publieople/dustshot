@@ -1,0 +1,175 @@
+# Catchlight
+
+[![CI](https://github.com/publieople/catchlight/actions/workflows/ci.yml/badge.svg)](https://github.com/publieople/catchlight/actions/workflows/ci.yml)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
+
+A Wayland-native screenshot, annotation and pinboard tool, written in Python with GTK 4.
+
+Catchlight shows a frozen frame of your desktop, lets you grab a region with pixel-accurate
+control, annotate it, and then copy it, save it, OCR it, or pin it as a floating window. It
+speaks wlr-screencopy through `grim` and wlr-layer-shell through `gtk4-layer-shell`, so it works
+on wlroots-style compositors (niri, Hyprland, Sway, ...) without a portal.
+
+> Independent implementation: no code, assets or file formats from any other screenshot tool are
+> used. See [docs/INDEPENDENCE.md](docs/INDEPENDENCE.md).
+
+![Region selector overlay](docs/images/selector.png)
+
+*Region capture: a frozen frame of the desktop, the selected area at full brightness, eight resize
+handles, a live size label, a magnifier with colour probe and the shortcut bar.*
+
+![Annotation editor](docs/images/editor.png)
+
+*Editor: toolbar with eleven tools, colour palette, per-tool widths, snapshot undo/redo, and
+save / copy / pin / OCR in the header bar.*
+
+![Pinned image](docs/images/pin.png)
+
+*Pinboard: any capture (or a file) can float above the desktop, draggable and zoomable, with a
+hover toolbar to copy, save or close it.*
+
+## Features
+
+- **Region capture** on a frozen backdrop: per-output full-screen overlay, dimmed outside area,
+  eight resize handles, live size label, magnifier with colour probe, crosshair.
+- **Annotation editor**: rectangle, ellipse, line, arrow, pen, highlighter, text, serial numbers,
+  mosaic and blur; ten-colour palette, per-tool widths, snapshot undo/redo, select and drag any
+  item, save/copy/pin without leaving the window.
+- **Pin**: drop a capture onto the screen as an always-on-top floating window; drag to move,
+  scroll to zoom, hover toolbar to copy, save or close.
+- **OCR**: tesseract behind a wrapper that keeps word boxes and line grouping, with `eng+chi_sim`
+  by default and 2x upscaling preprocess.
+- **Recording**: region or whole output to MP4 (H.264) through `wf-recorder`, optional GIF
+  conversion through ffmpeg, wall-clock limit, a small stop-recording window.
+- **Extras**: capture history, `.cln` editor projects, hotkey templates, `catchlight doctor`.
+
+## Requirements
+
+- Python 3.11 or newer, GTK 4, `gtk4-layer-shell`
+- `grim` (capture) and a compositor that implements wlr-screencopy
+- optional: `tesseract` + language data for OCR, `wf-recorder` and `ffmpeg` for recording,
+  `wl-clipboard` when the GTK clipboard is not available
+
+On Arch / CachyOS:
+
+```fish
+sudo pacman -S --needed python gtk4 gtk4-layer-shell grim tesseract tesseract-data-eng tesseract-data-chi_sim wf-recorder ffmpeg wl-clipboard
+```
+
+Runtime warning worth knowing: `gtk4-layer-shell` has to be preloaded before `libwayland`, so
+Catchlight re-executes itself with `LD_PRELOAD` set when needed. Nothing is installed or changed
+in your system; setting `CATCHLIGHT_NO_REEXEC=1` disables the re-exec.
+
+## Install
+
+```fish
+git clone https://github.com/publieople/catchlight
+cd catchlight
+python3 -m venv .venv
+source .venv/bin/activate.fish
+pip install -e '.[gtk]'
+
+# or, with pipx, keeping the GUI dependencies in one place:
+pipx install 'catchlight[gtk] @ git+https://github.com/publieople/catchlight'
+```
+
+`PyGObject` and `pycairo` are the only Python dependencies of the GUI extra; the editor, the
+renderer, the settings store and the CLI all work without them (that is what CI tests).
+
+## Usage
+
+```text
+catchlight                     # region capture, straight into the editor
+catchlight full                # whole output, into the editor
+catchlight capture --no-editor # capture and just save/copy
+catchlight edit IMAGE          # open the editor on an existing file
+catchlight pin IMAGE           # pin an image on the screen
+catchlight ocr [IMAGE]         # recognise text (captures a region when no file is given)
+catchlight record --duration 15 --gif
+catchlight history --limit 10
+catchlight settings --show
+catchlight settings --set capture.image_format=jpg
+catchlight hotkeys --compositor niri
+catchlight doctor              # check dependencies and environment
+catchlight version
+```
+
+Useful flags: `--rect '100,100 800x600'` to skip the overlay, `--dir`, `--format`, `--no-copy`,
+`--delay SECONDS`, `--pin`, `--position X,Y`, `--scale`. Run `catchlight COMMAND --help` for the
+full list.
+
+## Shortcuts
+
+Region overlay:
+
+| Key | Action |
+| --- | --- |
+| drag | draw / move / resize the region |
+| arrows, Shift+arrows | nudge by 1 px / 10 px |
+| Ctrl + scroll | grow or shrink the region |
+| Space / Ctrl+A | select the whole output |
+| Backspace | clear the region |
+| Enter | save and copy |
+| Ctrl+C / Ctrl+S | copy only / save only |
+| Ctrl+R | record the selected region |
+| Esc / right click | cancel |
+
+Editor:
+
+| Key | Action |
+| --- | --- |
+| Ctrl+Z / Ctrl+Shift+Z | undo / redo |
+| Ctrl+C / Ctrl+V | copy / paste an image |
+| Ctrl+S / Ctrl+P | save / pin |
+| Delete / Backspace | delete the selected item |
+| Esc | deselect |
+| + / - | change the tool width |
+| 1 - 9 | pick a palette colour |
+
+Pin window: `+` / `-` / `1` for zoom, Ctrl+C to copy, Ctrl+S to save, Esc or right click to
+close.
+
+## Compositor setup
+
+`catchlight hotkeys` prints a ready-to-paste snippet for niri, Hyprland, Sway, GNOME, KDE or any
+plain wlroots config. For niri:
+
+```kdl
+binds {
+    Print { spawn-sh "catchlight region"; }
+    Mod+Print { spawn-sh "catchlight full"; }
+}
+```
+
+For Hyprland:
+
+```text
+bind = , Print, exec, catchlight region
+bind = SUPER, Print, exec, catchlight full
+```
+
+## Configuration
+
+Settings live in `~/.config/catchlight/config.json` and are written by `catchlight settings
+--set SECTION.FIELD=VALUE`. The capturable sections are `capture`, `annotation`, `pin`, `ocr`
+and `recording`; capture history is kept in `~/.local/share/catchlight/history.json` and
+screenshots default to `~/Pictures/Screenshots`.
+
+## Development
+
+```fish
+python3 -m venv .venv; source .venv/bin/activate.fish
+pip install -e '.[dev]'
+python -m pytest        # 73 tests, no display required
+ruff check src tests
+ruff format --check src tests
+```
+
+The test suite deliberately avoids GTK: everything under `catchlight/` except `catchlight.ui` is
+importable headless, and the renderer is Pillow based, so CI runs on plain Ubuntu images. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the module map and
+[docs/ROADMAP.md](docs/ROADMAP.md) for milestone status.
+
+## License
+
+GPL-3.0-or-later. See [LICENSE](LICENSE).

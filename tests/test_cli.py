@@ -1,0 +1,74 @@
+"""Command line surface that works without a GUI."""
+
+from __future__ import annotations
+
+import json
+
+import pytest
+
+from catchlight import cli
+from catchlight.config import Settings
+
+
+def test_parser_lists_commands() -> None:
+    parser = cli.build_parser()
+    args = parser.parse_args([])
+    assert args.command is None
+    args = parser.parse_args(["region", "--pin"])
+    assert args.command == "region"
+    assert args.pin is True
+    args = parser.parse_args(["record", "--gif", "--duration", "3"])
+    assert args.command == "record"
+    assert args.gif is True
+    assert args.duration == 3
+
+
+def test_version_command(capsys: pytest.CaptureFixture[str]) -> None:
+    assert cli.main(["version"]) == 0
+    assert "catchlight" in capsys.readouterr().out
+
+
+def test_hotkeys_command(capsys: pytest.CaptureFixture[str]) -> None:
+    assert cli.main(["hotkeys", "--compositor", "niri"]) == 0
+    output = capsys.readouterr().out
+    assert "catchlight" in output
+    assert "spawn" in output
+
+
+def test_settings_show_is_json(capsys: pytest.CaptureFixture[str]) -> None:
+    assert cli.main(["settings", "--show"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert "capture" in payload
+    assert "annotation" in payload
+
+
+def test_unknown_command_is_an_error() -> None:
+    with pytest.raises(SystemExit):
+        cli.main(["nope"])
+
+
+def test_set_setting_coerces_types() -> None:
+    settings = Settings()
+    cli.set_setting(settings, "capture.image_format=jpg")
+    cli.set_setting(settings, "capture.copy_after_capture=false")
+    cli.set_setting(settings, "annotation.shape_width=5")
+    cli.set_setting(settings, "capture.last_region=[1, 2, 3, 4]")
+    assert settings.capture.image_format == "jpg"
+    assert settings.capture.copy_after_capture is False
+    assert settings.annotation.shape_width == 5
+    assert settings.capture.last_region == [1, 2, 3, 4]
+
+
+def test_set_setting_rejects_unknown_key() -> None:
+    with pytest.raises(SystemExit):
+        cli.set_setting(Settings(), "capture.nope=1")
+    with pytest.raises(SystemExit):
+        cli.set_setting(Settings(), "nope.value=1")
+
+
+def test_parse_rect_and_point() -> None:
+    assert cli.parse_rect("10,20,300,200") == cli.parse_rect("10,20,300,200")
+    assert (cli.parse_rect("1,2,3,4").width) == 3
+    assert cli.parse_point("10,20") == (10, 20)
+    with pytest.raises(SystemExit):
+        cli.parse_rect("1,2,3")
