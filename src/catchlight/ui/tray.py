@@ -144,7 +144,8 @@ class TrayItem:
         application: str | None = None,
     ) -> None:
         self.settings = settings
-        self.bus_name = f"{model.BUS_PREFIX}-{os.getpid()}-1"
+        self._bus_names = model.item_bus_names(os.getpid(), os.environ.get("FLATPAK_ID"))
+        self.bus_name = self._bus_names[0]
         self.on_quit = on_quit
         self._application = application or sys.executable
         self._spawn = spawn or self._spawn_command
@@ -164,19 +165,29 @@ class TrayItem:
             raise
 
     def _own_name(self) -> None:
-        reply = self._connection.call_sync(
-            "org.freedesktop.DBus",
-            "/org/freedesktop/DBus",
-            "org.freedesktop.DBus",
-            "RequestName",
-            GLib.Variant("(su)", (self.bus_name, NAME_FLAG_DO_NOT_QUEUE)),
-            None,
-            Gio.DBusCallFlags.NONE,
-            CALL_TIMEOUT_MS,
-            None,
-        )
-        if reply.unpack()[0] != NAME_RESULT_PRIMARY_OWNER:
-            raise TrayError(_("总线名 {bus_name} 已被占用").format(bus_name=self.bus_name))
+        problems = []
+        for name in self._bus_names:
+            try:
+                reply = self._connection.call_sync(
+                    "org.freedesktop.DBus",
+                    "/org/freedesktop/DBus",
+                    "org.freedesktop.DBus",
+                    "RequestName",
+                    GLib.Variant("(su)", (name, NAME_FLAG_DO_NOT_QUEUE)),
+                    None,
+                    Gio.DBusCallFlags.NONE,
+                    CALL_TIMEOUT_MS,
+                    None,
+                )
+            except GLib.Error as exc:
+                # A sandbox denies the org.kde name, so the item falls back to its own id.
+                problems.append(f"{name}: {exc.message}")
+                continue
+            if reply.unpack()[0] == NAME_RESULT_PRIMARY_OWNER:
+                self.bus_name = name
+                return
+            problems.append(_("总线名 {bus_name} 已被占用").format(bus_name=name))
+        raise TrayError(_("无法获得会话总线名：{detail}").format(detail="；".join(problems)))
 
     def _register_objects(self) -> None:
         item = Gio.DBusNodeInfo.new_for_xml(SNI_XML).interfaces[0]

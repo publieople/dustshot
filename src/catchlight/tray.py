@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 from PIL import Image, ImageDraw
 
+from . import APP_ID
 from .i18n import _
 
 ICON_NAME = "io.github.catchlight"
@@ -23,6 +24,20 @@ QUIT_ID = 7
 BUS_PREFIX = "org.kde.StatusNotifierItem"
 WATCHER_NAME = "org.kde.StatusNotifierWatcher"
 WATCHER_PATH = "/StatusNotifierWatcher"
+
+
+def item_bus_names(pid: int, sandbox_id: str | None = None) -> tuple[str, ...]:
+    """The bus names the tray item may own, the conventional one first.
+
+    StatusNotifierItem items normally live in the org.kde namespace, but a sandbox only lets
+    a process own names inside its own application id, so the item retries there.
+    """
+
+    return (
+        f"{BUS_PREFIX}-{pid}-1",
+        f"{sandbox_id or APP_ID}.StatusNotifierItem-{pid}-1",
+    )
+
 
 RED = (232, 74, 60, 255)
 YELLOW = (233, 196, 106, 255)

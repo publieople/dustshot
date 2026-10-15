@@ -121,7 +121,34 @@ LIBRARY_NAMES = (
     "libgtk4-layer-shell.so.0",
     "libgtk4-layer-shell.so.1",
 )
-LIBRARY_DIRS = ("/usr/lib", "/usr/lib64", "/usr/local/lib", "/usr/lib/x86_64-linux-gnu")
+LIBRARY_DIRS = (
+    "/app/lib",
+    "/app/lib64",
+    "/usr/lib",
+    "/usr/lib64",
+    "/usr/local/lib",
+    "/usr/lib/x86_64-linux-gnu",
+)
+
+
+def library_dirs() -> list[str]:
+    """Return the directories to search, the loader path first.
+
+    A Flatpak installs the library into /app/lib and points LD_LIBRARY_PATH at it, while a
+    distribution package lands in /usr/lib; searching the loader path first also lets a
+    sandboxed build shadow a host copy.
+    """
+
+    import os
+    from pathlib import Path
+
+    directories = [piece for piece in os.environ.get("LD_LIBRARY_PATH", "").split(":") if piece]
+    directories.extend(LIBRARY_DIRS)
+    seen: list[str] = []
+    for directory in directories:
+        if directory not in seen and Path(directory).is_dir():
+            seen.append(directory)
+    return seen
 
 
 def library_path() -> str | None:
@@ -132,9 +159,9 @@ def library_path() -> str | None:
 
     found = ctypes.util.find_library("gtk4-layer-shell")
     candidates = []
-    if found:
+    if found and Path(found).is_absolute():
         candidates.append(found)
-    for directory in LIBRARY_DIRS:
+    for directory in library_dirs():
         for name in LIBRARY_NAMES:
             candidates.append(str(Path(directory) / name))
     for candidate in candidates:

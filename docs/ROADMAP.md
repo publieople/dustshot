@@ -57,7 +57,7 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
   stitching, wtype / ydotool auto-advance, a manual mode, and a guard that reports a screen
   that never moved. Verified on a live niri session against a 2048x6000 page.
 
-## M5 — Recording, integration, packaging  (partial)
+## M5 — Recording, integration, packaging  (done)
 
 - done: `wf-recorder` backend for a region or a whole output, wall-clock limit, GIF conversion
   through ffmpeg, a small recording control window, `catchlight doctor` diagnostics, hotkey
@@ -82,7 +82,15 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
   `src/catchlight/locale/en/LC_MESSAGES/catchlight.mo` (shipped as package data), and
   `CATCHLIGHT_LANG` / `CATCHLIGHT_LOCALEDIR` drive the lookup, with tests for the catalogue
   completeness and the `python3 -m catchlight.i18n compile` tool.
-- planned: a tested Flatpak build.
+- done: a tested Flatpak build (`packaging/io.github.catchlight.yml`, GNOME runtime 51): the
+  manifest bundles gtk4-layer-shell, grim and wl-clipboard from git, installs Pillow and
+  catchlight with pip and ships the desktop entry, the AppStream metadata and the icon sizes. A
+  sandboxed client connects through a Wayland security context, so niri hides wlr-screencopy and
+  wlr-layer-shell from it — `--backend auto` picks the ScreenCast portal there, overlays and pins
+  fall back to ordinary windows, the tray item falls back to a bus name under the application id,
+  and OCR / recording stay on the host install. Verified on a live niri session: a 2560x1600
+  full-screen PNG and a 400x300 region capture taken from the sandbox match the host `grim`
+  output, and `catchlight doctor` reports the sandbox.
 
 ## Deliberately out of scope
 

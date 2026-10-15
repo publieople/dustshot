@@ -7,3 +7,6 @@ dist/
 .coverage
 .pytest_cache/
 .ruff_cache/
+# Flatpak builds
+build-dir/
+.flatpak-builder/

@@ -88,11 +88,16 @@ def load_image(path: str) -> Any:
 def capture_backend(name: str = "auto") -> str:
     """Resolve the requested capture backend to the one that will be used."""
 
-    from .capture import portal, screencopy
+    from .capture import base, screencopy
 
     grim = screencopy.have_grim()
+    if name == "auto" and base.in_flatpak():
+        # A sandboxed client gets no wlr-screencopy global, so the portal is the only way out.
+        name = "portal"
     if name == "auto" and grim:
         return "grim"
+    from .capture import portal
+
     return portal.backend_choice(name, grim=grim, portal=portal.have_portal())
 
 
@@ -652,6 +657,14 @@ def command_doctor(args: argparse.Namespace, settings: Settings, store: Settings
     add("WAYLAND_DISPLAY", bool(display), display or _("未设置"))
     add(_("grim（截图）"), shutil.which("grim") is not None, shutil.which("grim") or _("未安装"))
     add(_("niri IPC（区域/指针）"), shutil.which("niri") is not None, shutil.which("niri") or _("未安装"))
+    from .capture import base
+
+    if base.in_flatpak():
+        add(
+            _("Flatpak 沙箱"),
+            True,
+            _("合成器对沙箱客户端隐藏 wlr-screencopy 与 layer-shell；截图默认走 ScreenCast portal"),
+        )
     have_clipboard = shutil.which("wl-copy") is not None and shutil.which("wl-paste") is not None
     add(_("wl-copy/wl-paste（剪贴板）"), have_clipboard, shutil.which("wl-copy") or _("未安装"))
     add("tesseract（OCR）", shutil.which("tesseract") is not None, shutil.which("tesseract") or _("未安装"))

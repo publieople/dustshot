@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from PIL import Image
 
-from catchlight import cli, tray
+from catchlight import APP_ID, cli, tray
 
 
 def test_menu_ids_are_unique() -> None:
@@ -81,3 +81,15 @@ def test_icon_pixmap_has_four_bytes_per_pixel() -> None:
     width, height, data = tray.icon_pixmap(32)
     assert (width, height) == (32, 32)
     assert len(data) == 32 * 32 * 4
+
+
+def test_item_bus_names_start_with_the_conventional_one() -> None:
+    conventional, own = tray.item_bus_names(7)
+    assert conventional == f"{tray.BUS_PREFIX}-7-1"
+    assert own == f"{APP_ID}.StatusNotifierItem-7-1"
+
+
+def test_item_bus_names_use_the_sandbox_id_when_there_is_one() -> None:
+    assert tray.item_bus_names(7, "io.github.catchlight")[1] == (
+        "io.github.catchlight.StatusNotifierItem-7-1"
+    )

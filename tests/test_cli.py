@@ -235,6 +235,17 @@ def test_capture_backend_prefers_grim_unless_asked(monkeypatch: pytest.MonkeyPat
         cli.capture_backend("grim")
 
 
+def test_capture_backend_uses_the_portal_inside_flatpak(monkeypatch: pytest.MonkeyPatch) -> None:
+    from catchlight.capture import base, portal, screencopy
+
+    monkeypatch.setattr(screencopy, "have_grim", lambda: True)
+    monkeypatch.setattr(portal, "have_portal", lambda: True)
+    monkeypatch.setattr(base, "in_flatpak", lambda: True)
+
+    assert cli.capture_backend("auto") == "portal"
+    assert cli.capture_backend("grim") == "grim"
+
+
 def test_capture_full_dispatches_to_the_requested_backend(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

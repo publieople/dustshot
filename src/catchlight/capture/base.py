@@ -8,6 +8,19 @@ from dataclasses import dataclass
 from PIL import Image
 
 
+def in_flatpak() -> bool:
+    """True when the process runs inside a Flatpak sandbox.
+
+    A sandboxed client connects through a Wayland security context, and niri answers it with a
+    reduced protocol set: wlr-screencopy and wlr-layer-shell are hidden, so a screenshot has to
+    go through the ScreenCast portal and the overlay falls back to a normal window.
+    """
+
+    from pathlib import Path
+
+    return Path("/.flatpak-info").exists()
+
+
 @dataclass(frozen=True)
 class Geometry:
     """An integer rectangle in logical (compositor) coordinates."""
