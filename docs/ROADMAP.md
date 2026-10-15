@@ -33,14 +33,16 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
 - Save, copy, pin or OCR straight from the editor; projects round-trip through a `.cln` file
   (a zip holding `annotations.json` and `image.png`).
 
-## M3 — Pinboard  (partial)
+## M3 — Pinboard  (done)
 
 - done: floating layer-shell pin window, drag to move, scroll to zoom (0.15x - 4x), hover
   toolbar, copy / save / close, keyboard shortcuts, opacity and border from settings.
 - done: several pins at once (CatchlightApp.spawn_pin), pin-again from the toolbar or the editor,
   edge and centre snapping while dragging (snap.py), a centre button, click-through (only the
   hover toolbar stays clickable) and a per-pin opacity slider.
-- planned: grouping pins, keeping the pin above a specific window.
+- done: pin groups (pinboard.py): the link toggle (联动) ties two or more pins together
+  so they share every drag and every zoom step, a group that drops below two members is
+  dissolved again, and grouped members are clamped to the output they sit on.
 
 ## M4 — OCR and capture extras  (done)
 
@@ -71,6 +73,8 @@ come, and what is deliberately left out. Status legend: **done**, **partial**, *
 ## Deliberately out of scope
 
 - Windows and macOS: the capture and overlay layers are Wayland specific.
+- Binding a pin to one specific window: pins already sit on the layer-shell overlay layer above
+  every window, and the layer protocol cannot attach a surface to another window.
 - Cloud upload, accounts, telemetry: Catchlight never talks to the network.
 - Any code, asset or file format taken from another screenshot utility; see
   docs/INDEPENDENCE.md for the clean-room statement.

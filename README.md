@@ -46,7 +46,9 @@ then covers each hit with an opaque block (mosaic and blur are available too).*
   item, save/copy/pin without leaving the window.
 - **Pin**: drop one or more captures onto the screen as always-on-top floating windows; drag to
   move (with edge and centre snapping), scroll to zoom, per-pin opacity, click-through, a
-  centre button and a hover toolbar with copy, save, pin-again and close.
+  centre button and a hover toolbar with copy, save, pin-again and close. The link toggle
+  (联动) ties two or more pins into a group that moves and zooms as one, and a group
+  dissolves as soon as fewer than two pins are left in it.
 - **OCR**: tesseract behind a wrapper that keeps word boxes and line grouping, with `eng+chi_sim`
   by default and 2x upscaling preprocess.
 - **QR and barcodes**: `catchlight codes` decodes QR codes and 1D barcodes with `zbarimg`,
@@ -165,7 +167,7 @@ Editor:
 
 Pin window: `+` / `-` / `1` for zoom, Ctrl+C to copy, Ctrl+S to save, Esc or right click to
 close. The hover toolbar adds `1:1` (reset zoom), copy, save, pin-again, centre, a
-click-through toggle and an opacity slider.
+click-through toggle, an opacity slider and the link toggle (联动) that groups pins together.
 
 ## Compositor setup
 

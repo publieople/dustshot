@@ -18,6 +18,7 @@ from .. import clipboard, output
 from ..annotation.document import Document
 from ..config import Settings
 from ..history import History
+from ..pinboard import PinBoard
 from ..record import Recorder, RecordError
 from .editor import EditorWindow
 from .history_window import HistoryWindow
@@ -124,6 +125,7 @@ class CatchlightApp(Gtk.Application):
         self.history = History()
         self.editors: list[EditorWindow] = []
         self.pins: list[PinWindow] = []
+        self.board = PinBoard()
         self.extra: list[Any] = []
         self.recording_result: Any = None
         self.recording_error: str | None = None
@@ -183,6 +185,7 @@ class CatchlightApp(Gtk.Application):
         image: Image.Image,
         position: tuple[int, int] = (140, 140),
         scale: float = 1.0,
+        group: str | None = None,
     ) -> PinWindow:
         """Create a pin window and keep the application alive while it is open."""
 
@@ -192,16 +195,52 @@ class CatchlightApp(Gtk.Application):
             self.settings,
             position=position,
             scale=scale,
+            group=group,
             on_close=self.forget_pin,
         )
         self.pins.append(window)
         window.present()
+        if group is not None:
+            self.board.add(window, group)
+            window.link_button.set_active(True)
         return window
 
     def forget_pin(self, window: Any) -> None:
         if window in self.pins:
             self.pins.remove(window)
+        self.board.remove(window)
         self._maybe_quit()
+
+    # ----------------------------------------------------------------- groups
+    def group_pins(self, pins: Iterable[Any]) -> str | None:
+        """Put the given pins in one group that moves and zooms together."""
+
+        group = self.board.group(pins)
+        for pin in pins:
+            pin.group = group
+        return group
+
+    def link_pin(self, pin: Any, linked: bool) -> str | None:
+        """React to a pin toggling its linked button."""
+
+        if not linked:
+            self.board.ungroup(pin)
+            pin.group = None
+            return None
+        others = [other for other in self.pins if other is not pin and getattr(other, "linked", False)]
+        return self.group_pins([pin, *others])
+
+    def move_pin(self, pin: Any, x: int, y: int) -> None:
+        """Move one pin and every pin grouped with it."""
+
+        for member, nx, ny in self.board.move(pin, x, y):
+            member.place(nx, ny)
+
+    def zoom_pin(self, pin: Any, factor: float) -> None:
+        """Scale one pin and every pin grouped with it."""
+
+        for member, scale in self.board.zoom(pin, factor):
+            member.set_scale(scale)
 
     def add_extra(self, window: Any) -> None:
         """Track one more window that should keep the application alive."""

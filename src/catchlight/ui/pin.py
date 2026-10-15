@@ -32,11 +32,14 @@ class PinWindow(Gtk.ApplicationWindow):
         settings: Any = None,
         position: tuple[int, int] = (140, 140),
         scale: float = 1.0,
+        group: str | None = None,
         on_close: Any = None,
     ) -> None:
         super().__init__(application=app)
         self.app = app
         self.settings = settings
+        self.group = group
+        self.linked = False
         self.image = image.convert("RGBA") if image.mode == "RGBA" else image.convert("RGB")
         self.scale = max(MIN_SCALE, min(MAX_SCALE, float(scale)))
         self.position = (int(position[0]), int(position[1]))
@@ -121,6 +124,11 @@ class PinWindow(Gtk.ApplicationWindow):
         centre.connect("clicked", lambda _b: self._centre())
         toolbar.append(centre)
 
+        self.link_button = Gtk.ToggleButton(label="联动")
+        self.link_button.set_tooltip_text("与其他开启联动的贴图一起移动和缩放")
+        self.link_button.connect("toggled", self._on_link_toggled)
+        toolbar.append(self.link_button)
+
         self.click_button = Gtk.ToggleButton(label="穿透")
         self.click_button.set_tooltip_text("只让下方工具条响应鼠标，图片区域点击穿透")
         self.click_button.connect("toggled", self._on_click_through_toggled)
@@ -154,6 +162,27 @@ class PinWindow(Gtk.ApplicationWindow):
             return
         shell.set_margin(self, shell.Edge.TOP, self.position[1])
         shell.set_margin(self, shell.Edge.LEFT, self.position[0])
+
+    def place(self, x: int, y: int) -> None:
+        """Move this window, used for grouped moves."""
+
+        self._move_to(x, y)
+
+    def set_scale(self, scale: float) -> None:
+        """Set an absolute zoom level, used for grouped zooms."""
+
+        value = max(MIN_SCALE, min(MAX_SCALE, float(scale)))
+        if abs(value - self.scale) < 1e-4:
+            return
+        self.scale = value
+        self._apply_size()
+
+    def _move_with_group(self, x: int, y: int) -> None:
+        mover = getattr(self.app, "move_pin", None)
+        if self.group is not None and mover is not None:
+            mover(self, x, y)
+            return
+        self._move_to(x, y)
 
     def _show_toolbar(self, visible: bool) -> None:
         if self._toolbar is not None:
@@ -199,17 +228,12 @@ class PinWindow(Gtk.ApplicationWindow):
             width = max(1, round(self.image.width * self.scale))
             height = max(1, round(self.image.height * self.scale))
             x, y = snap_position(x, y, width, height, bounds)
-        self._move_to(x, y)
+        self._move_with_group(x, y)
 
     def _on_scroll(self, controller: Gtk.EventControllerScroll, dx: float, dy: float) -> bool:
         if dy == 0:
             return False
-        factor = 1.1 if dy < 0 else (1 / 1.1)
-        new_scale = max(MIN_SCALE, min(MAX_SCALE, self.scale * factor))
-        if abs(new_scale - self.scale) < 1e-4:
-            return True
-        self.scale = new_scale
-        self._apply_size()
+        self._zoom(1.1 if dy < 0 else (1 / 1.1))
         return True
 
     def _on_key(self, controller: Gtk.EventControllerKey, keyval: int, code: int, state: Any) -> bool:
@@ -236,6 +260,10 @@ class PinWindow(Gtk.ApplicationWindow):
 
     # ----------------------------------------------------------------- actions
     def _zoom(self, factor: float) -> None:
+        zoomer = getattr(self.app, "zoom_pin", None)
+        if self.group is not None and zoomer is not None:
+            zoomer(self, factor)
+            return
         self.scale = max(MIN_SCALE, min(MAX_SCALE, self.scale * factor))
         self._apply_size()
 
@@ -264,7 +292,7 @@ class PinWindow(Gtk.ApplicationWindow):
         spot = (self.position[0] + 28, self.position[1] + 28)
         spawner = getattr(parent, "spawn_pin", None)
         if spawner is not None:
-            spawner(self.image.copy(), position=spot, scale=self.scale)
+            spawner(self.image.copy(), position=spot, scale=self.scale, group=self.group)
             return
         PinWindow(parent, self.image.copy(), self.settings, position=spot, scale=self.scale)
 
@@ -287,6 +315,12 @@ class PinWindow(Gtk.ApplicationWindow):
         height = max(1, round(self.image.height * self.scale))
         x, y = centre_position(width, height, self._monitor_bounds())
         self._move_to(x, y)
+
+    def _on_link_toggled(self, button: Gtk.ToggleButton) -> None:
+        self.linked = bool(button.get_active())
+        linker = getattr(self.app, "link_pin", None)
+        if linker is not None:
+            linker(self, self.linked)
 
     def _on_click_through_toggled(self, button: Gtk.ToggleButton) -> None:
         self.click_through = bool(button.get_active())

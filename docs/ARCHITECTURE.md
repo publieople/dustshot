@@ -21,12 +21,13 @@ what lets the test suite and CI run headless.
 | `catchlight/ocr.py` | tesseract wrapper, TSV parsing, word grouping |
 | `catchlight/redact.py` | sensitive text patterns, OCR word box grouping, masking items |
 | `catchlight/scroll.py` | scrolling capture: row signatures, overlap detection, stitching |
+| `catchlight/pinboard.py` | pin groups: shared move and zoom model |
 | `catchlight/record.py` | `wf-recorder` / `gpu-screen-recorder` backends, GIF conversion |
 | `catchlight/ui/layer.py` | gtk4-layer-shell setup plus the `LD_PRELOAD` re-exec dance |
 | `catchlight/ui/selector.py` | the full-screen region overlay |
 | `catchlight/ui/canvas.py` | the annotation canvas (Pillow render + Cairo blit, live preview) |
 | `catchlight/ui/editor.py` | the editor window: toolbar, palette, actions, OCR panel |
-| `catchlight/ui/pin.py` | the floating pinned image (snapping, click-through, opacity) |
+| `catchlight/ui/pin.py` | the floating pinned image (snapping, click-through, opacity, link toggle) |
 | `catchlight/ui/history_window.py` | the browsable capture history window |
 | `catchlight/ui/app.py` | `Gtk.Application` that owns the windows for one CLI invocation |
 | `catchlight/cli.py` | argparse front end for every command |
